@@ -1,0 +1,1991 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Flygeonの小站</title>
+    <link>https://flygeon.top/</link>
+    <description>Flygeonの小站</description>
+    <language>zh_CN</language>
+    <lastBuildDate>Sun, 30 Aug 2026 13:59:34 GMT</lastBuildDate>
+    <item>
+  <title>经过再三考虑，最终放弃了Fuwari，重构了博客</title>
+  <link>https://flygeon.top/posts/restart-blog/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/restart-blog/</guid>
+  <pubDate>Fri, 28 Aug 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[将原Fuwari的博客迁移成Vue架构，重新设计了博客UI，本篇文章讲述重构的前因后果以及开发流程]]></description>
+  <content:encoded><![CDATA[<h2>Fuwari足够美观优秀，为什么要重构？</h2>
+<p>在重构前我就考虑过这个问题了，毫无疑问Fuwari确实是我用过的比较好用的现代化的博客主题了~~（意义不明的大段形容词）~~，颜值不错，而且得益于Swup页切动画，Fuwari的动画也足够丝滑。</p>
+<p>但问题是，我的目标不仅仅局限于使用原版Fuwari进行博客创作，因此势必要进行大量的魔改，而这一改就出问题了。如果作为一个纯静态的博客其实魔改起来还算好，毕竟Astro是一个<strong>默认 SSG</strong> 的框架（这么说好像不是很准确），而我则加了很多不属于传统静态的东西，比如说 Bangumi 界面，还有动态（对接了自建的 Memos）。这些东西如果用纯 SSG 实现就不是很雅观了，数据只能在<strong>构建时写入</strong>，做不到实时更新。虽说 Fuwari 也支持 SSR，可以实现<strong>服务端实时渲染</strong>，但在 Swup 页切动画的加持下，SSR 的 JavaScript 逻辑和事件监听器写起来<strong>极其混乱</strong>，而且这玩意还很容易和 Swup 打架。Swup 这东西好看是好看，但写起来纯纯坐牢。</p>
+<p>于是在一步步魔改下，我的项目就变成了一坨<strong>屎山</strong>。虽然确实能跑，但总是会有奇奇妙妙的小bug（直到原博客项目归档，部分界面闪烁的问题仍未完全修复），而且变得特别重，打开 dev 测试要等好几分钟，内存占用还巨大。那么是时候该画上句号了。</p>
+<h2>归档 &amp; 立项</h2>
+<p>首先先对原项目进行了归档，接着开了个新仓库 <code>REBLOG</code> 来记录重构后的博客。其实最开始也考虑过 Svelte，我之前的个人导航页就是拿 Svelte 写的，但个人感觉 Vue 的<strong>生态更成熟</strong>些，于是就选用 Vue 了。</p>
+<p>首先把原博客的文章复制过来，然后开始开发。由于我本人比较青睐于 Material Design 3 的设计语言，遂采用 <strong>MD3 风格</strong>进行创作。</p>
+<p>然后先需要对文章的元数据进行处理。Fuwari 采用的是 Markdown 文档存储文章，所以只需要<strong>内建一个 Markdown 解析器</strong>，对原文章 <code>---</code> 框起来的元数据进行解析，再呈现到前端界面上就行了。</p>
+<p>接下来就是不断的优化、测试、上线了。现在新版的博客保留了原版的大部分内容，后续还会持续优化。</p>
+<h2>一些变动</h2>
+<p>原来用的是自建 Memos，其实用着还行，但原版依赖 Docker 部署，于是我干脆直接用 <strong>Cloudflare Worker</strong> 重写了一个动态功能并做好路由，图片放到 <strong>R2</strong> 顺便还能白嫖 CF 的流量，现在已经取代了原有的 Memos 动态。</p>
+<p>另外评论也换回到了 <strong>Giscus</strong>，顺便做了个深浅主题切换的功能。</p>
+<h2>上线</h2>
+<p>做好之后就是上线了。原来主页的分路切换暂时下线，后续会直接进行分流处理。直接在 Cloudflare 新建一个 Worker 并配置路由（用了第三方 CDN），再到 CDN 提供商把 CNAME 指向新的 Worker 域名就行了。</p>
+<p>接下来再去 Google 和必应重新提交一下站点地图。顺带一提，原 Fuwari 生成的 sitemap.xml 提交到 Google Search Console 和必应站长平台后，不知道是因为我魔改了还是怎么回事，一直<strong>未被正常处理</strong>，提交后迟迟没有索引。</p>
+<p>至此，重构任务就算是完成了。</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>给播放器接上网易云账号登录：被 HTTP 200 空响应折磨了六个小时，最后败给一行代码</title>
+  <link>https://flygeon.top/posts/netease-music-account/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/netease-music-account/</guid>
+  <pubDate>Sun, 16 Aug 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[从扫码登录到歌单云盘播放，本以为一晚上搞定，结果被「HTTP 200 但 0 字节」的诡异空响应折腾了整整六个小时。RSA 填充、PEM 换行、AES 层序……最后真凶是一行没写的代码。]]></description>
+  <content:encoded><![CDATA[<p>事情是这样的，我原先开发的多媒体库应用 LumiLuna 重构了，重构后我就添加了接入metingAPI播放在线音乐，但这玩意有个痛点：metingAPI只能读取歌单前200首，而且还得手动导入歌单，非常滴麻烦，那么，是时候加入网易云登录系统了，当时我的想法很天真：直接找现有的开源接口解密项目，照着抄就行了。结果这一抄，就是六个小时的噩梦。</p>
+<h2>前提：我的编译环境是薛定谔的</h2>
+<p>先交代一下背景约束，不然你没法理解为什么这么简单的功能能拖这么久：</p>
+<ul>
+<li>登录态（cookie）必须留在 Rust 侧，不能给 WebView 看到，所以签名加密都得自己用 Rust 写</li>
+<li>UI 不单独做页面，融进现有的音乐选项卡</li>
+<li>这台开发机没有 MSVC / Windows SDK，C 盘常年只剩 0~2GB，<strong>本地编译？不存在的</strong>，全靠 GitHub Actions 云端构建，每改一次代码 = commit + push + 等 6~9 分钟 CI + 下载安装实测</li>
+</ul>
+<p>也就是说，每一次试错的最小成本是十分钟起步。</p>
+<h2>第一阶段：顺利得让人害怕</h2>
+<p>网易云的接口加密大致分三套：</p>
+<ul>
+<li><strong>weapi</strong>：网页端协议，双层 AES-CBC + RSA-1024，账号/歌单/云盘都走它</li>
+<li><strong>eapi</strong>：客户端协议，MD5 + AES-ECB，扫码登录和播放 URL 走它</li>
+<li><strong>xeapi</strong>：新一代协议，X25519 密钥协商 + AES-128-GCM 加密 + HMAC 签名 + 外层 AES-ECB 套壳，三层链路叠满，用来注册「匿名设备身份」</li>
+</ul>
+<p>参考项目是 api-enhanced，所有算法和请求头都照它来。Rust 侧把三套加密实现完，一路火花带闪电，除了两件事：</p>
+<p>一是 RSA 公钥解析：网易云的公钥是 SPKI 格式（BEGIN PUBLIC KEY），我第一次用了只认 PKCS#1 格式的解析器，运行期必炸，又手贱用了 <code>.expect()</code>，结果一点音乐选项卡，应用直接闪退。</p>
+<p>二是 Tauri 2 的同步命令会卡主线程，网络请求一开整个窗口冻住，得全部改成 async + spawn_blocking。</p>
+<p>修完这两茬，扫码终于能出二维码了，但手机一扫，网易云直接甩脸：<strong>「检测到当前设备环境异常，本次操作已拦截」</strong>。</p>
+<p>排查发现参考项目启动时会先用 xeapi 注册一个<strong>匿名设备身份</strong>（MUSIC_A cookie），所有请求都带着它。我们裸奔请求，被风控一眼识破。于是又移植了 xeapi——这一波贡献了全项目最多的一批编译错误：x25519-dalek 的 feature 门控、try_into 类型推断、ECB trait 导入……还有个隐藏炸弹：xeapi 签名的 HMAC 密钥，参考项目直接把 base64 字符串的字节当 key，我傻乎乎先解码再用，签名从头错到尾。</p>
+<p>搞定这些，扫码终于能授权成功了——顺带把轮询状态码也摸透了：800 已过期、801 等待扫码、802 已确认待点登录、803 登录成功。我以为要收工了。</p>
+<h2>第二阶段：HTTP 200，0 字节——地狱之门</h2>
+<p>扫码授权成功后的下一步是拉账号信息（weapi 的 account/get），然后不出意外就出意外了，报错：</p>
+<blockquote>
+<p>网易云响应解析失败(/w/nuser/account/get，HTTP 200，0字节)</p>
+</blockquote>
+<p>HTTP 200，响应体 0 字节。服务器客客气气收了请求，然后一个字都不回。</p>
+<p>这个错误贯穿了后面六七个版本的构建。它本质上是好几个真实缺陷叠在一起，单个修完都不足以让请求成功，所以排查过程极其漫长。按时间线，这些坑长这样：</p>
+<h3>坑 1：reqwest 不自动带 Content-Type</h3>
+<p>参考项目用 axios，发表单自动带 Content-Type；reqwest 的 <code>.body()</code> 什么都不带，服务器读不到表单参数直接回空。补上之后 eapi 的 unikey 接口终于开始吐正常 JSON 了。</p>
+<h3>坑 2：unikey 字段位置</h3>
+<p>实测发现 unikey 在响应顶层，不在 data 下面，一行取值逻辑的事。</p>
+<h3>坑 3：PEM 必须 64 字符换行</h3>
+<p>RSA 公钥从参考项目拷过来是一整行 216 字符。Node/OpenSSL 无所谓，但 Rust 的 pem-rfc7468 是严格解码器，要求每行恰好 64 字符，否则报 invalid Base64 encoding。把 crate 源码下载下来逐行确认后，拆成四行搞定。</p>
+<h3>坑 4：请求要有「特征」</h3>
+<p>海外/机房 IP 的裸请求会被风控直接空响应，于是照参考项目的 server.js 抄了随机中国 IP 头（X-Real-IP / X-Forwarded-For）。</p>
+<h3>坑 5：RSA 填充模式——这个是真的坑</h3>
+<p>参考项目的 rsaEncrypt 用的是 node-forge 的 <code>encrypt(str, 'NONE')</code>。我一直以为 'NONE' 是个无害的默认值，直到下载 node-forge 源码，看到：</p>
+<pre><code>} else if(['RAW', 'NONE', 'NULL', null].indexOf(scheme) !== -1) {
+    scheme = {encode: function(e) {return e;}};   // 裸 RSA，无填充！
+}
+</code></pre>
+<p><strong>'NONE' = 无填充裸 RSA。</strong> 我用的 PKCS1v1.5 填充，服务端裸解密拿到带填充头的 128 字节，secretKey 提取失败。改成直接 modpow，输出和 forge 完全一致。</p>
+<h3>坑 6：双层 AES 层序写反</h3>
+<p>参考实现是 presetKey 在内层、secretKey 在外层，我一开始写反了。修。</p>
+<p>……修完所有这些，依然空 body。</p>
+<p>（期间还有个小插曲：这台机器常年开着 127.0.0.1:7890 代理，reqwest 默认会读 HTTP_PROXY 环境变量，请求全被塞进代理隧道，报一堆隧道错误，<code>.no_proxy()</code> 一发入魂。它不属于空 body 家族，但属于「环境比你想象得脏」家族——顺手记一笔。）</p>
+<h2>第三阶段：让应用自己交代</h2>
+<p>到这里我意识到不能再靠猜了。好在这台机器上参考项目能本地跑、Node 也能跑，于是建立了三对照调试法：</p>
+<ol>
+<li><strong>Node 复刻</strong>：把 Rust 的加密算法用 Node 逐行复刻一遍打真实接口——<strong>永远成功</strong>，完整 JSON</li>
+<li><strong>curl 对照</strong>：请求参数导出用 curl 原样发——<strong>也成功</strong></li>
+<li><strong>应用实测</strong>：<strong>永远失败</strong>，空 body</li>
+</ol>
+<p>三个实现，内容一模一样，只有应用失败。这大概就是程序员最折磨的状态：不是不知道怎么做，是「照着能跑的实现抄都抄不对」。</p>
+<p>接下来是几招逐步缩小包围圈：</p>
+<p><strong>第一招，给应用加全量请求日志。</strong> 每次请求把 URL、完整请求头（含 Cookie 全值）、请求体全文写进 appdata 下的日志文件。用户测完我直接读文件——彻底绕开「肉眼转述 + OCR 乱码」这条失真通道。这一步非常关键，后面所有判断都建立在真实请求上。</p>
+<p><strong>第二招，原样重放。</strong> 把应用日志里的请求用 Node 逐字节重放——空 body。再把请求头/URL 原样保留、只把 BODY 换成 Node 自己生成的——成功。</p>
+<blockquote>
+<p>结论锁定：应用生成的加密产物内容不对。长度对、格式对，但服务端解不开。</p>
+</blockquote>
+<p><strong>第三招，加密自检。</strong> 让 Rust 在加密后用同一把密钥把密文解回来验证。结果吓人一跳：</p>
+<pre><code>WEAPI-SELFCHECK 自检内层可解但外层失败：Invalid symbol 0, offset 0. 内层前40=0000000000000000000000000000000000000000
+</code></pre>
+<p><strong>用密钥解自己刚加密的密文，得到全 0。</strong> AES 加密/解密不自洽，这在密码学上几乎是不可想象的，除非实现有 bug。</p>
+<p><strong>第四招，固定密钥复现。</strong> 为了排除随机性，加了一段固定密钥的复现加密，把 text、inner、params、解密结果全部打进日志。然后我看到了决定性的一幕：<strong>两次请求的 text 不同（csrf 不同），加密出来的 inner 却完全相同。</strong></p>
+<p>加密函数对不同的明文输出相同的密文——那它加密的到底是什么？</p>
+<p>（插曲：这套固定密钥调试代码本身还闹了个笑话。随手写的调试密钥 <code>FixedSecret123456</code> 有 18 个字符，AES 密钥长度断言直接 panic，应用一启动就闪退——功能还没修好，界面先崩了，改回 16 字符的 <code>AbCdEfGhIjKlMnOp</code> 才消停。）</p>
+<h2>真相：一行代码的缺席</h2>
+<p>答案藏在 cipher crate 的 API 语义里。<code>encrypt_padded_mut</code> 是<strong>就地接口</strong>：</p>
+<pre><code>fn encrypt_padded_mut&lt;P&gt;(self, buf: &amp;mut [u8], msg_len: usize) -&gt; Result&lt;&amp;[u8], PadError&gt;
+</code></pre>
+<p>它把 buf 的<strong>前 msg_len 个字节当作明文输入</strong>，加密后写回 buf 开头。而我的代码是：</p>
+<pre><code>let mut buf = vec![0u8; msg.len() + 16];   // 只分配了全 0 的 buffer
+let ct = enc.encrypt_padded_mut::&lt;Pkcs7&gt;(&amp;mut buf, msg.len())?;
+</code></pre>
+<p><strong>明文从来没写进 buf。</strong> 于是每一次加密的都是「全 0 的 61 字节」，两次请求当然产出相同的 inner；服务端拿到密文解出来是 0，自然一个字都不想回。之前所有诡异现象——包括自检解出全 0——全部自洽地指向这个事实。</p>
+<p>修复只有一行：</p>
+<pre><code>buf[..msg.len()].copy_from_slice(msg);   // 明文写入 buf 开头
+</code></pre>
+<p>然后，整个流程就通了。扫码、账号、歌单、播放，全部正常。</p>
+<p>这个 bug 为什么这么难找？因为它藏在一个几乎没人会细看的 API 语义里：<code>encrypt_padded_mut</code> 不是「传明文、返回密文」的函数式接口，而是「你把明文放进 buffer，我原地加密」的就地接口。而 Node 的 createCipheriv、参考项目的 CryptoJS 都是前一种语义——用「正确实现的直觉」去写「就地接口」的代码，写出来的就是这种全 0 密文。</p>
+<p>顺带一提，eapi 之所以一直正常，是因为它用的 AES-ECB 是逐块显式拷贝明文实现的，绕开了这个坑。同一套代码里，一个函数躲过了 bug，另一个踩得死死的。</p>
+<h2>现在的状态</h2>
+<p>全链路现在是通的：扫码登录、账号信息、我的歌单、云盘列表、登录态下的在线播放，一个不缺；登录态会持久化到本地，下次打开应用不用重新扫码。搜索和推荐歌单暂时还走 meting 聚合接口——它们不需要登录，能省则省，哪天 meting 挂了再考虑全量迁到官方接口。</p>
+<p>代价也记一笔：这些接口全是逆向出来的非官方协议，网易云哪天改协议、加风控，这段代码可能一夜之间变废纸。到时候，再回来折腾吧。</p>
+<h2>一些真实的感想</h2>
+<p>这场仗打下来，几个体会值得记下：</p>
+<ol>
+<li>
+<p><strong>API 语义比算法本身更容易出错。</strong> 加密算法移植最大的风险不是算法写错，而是「你以为的接口行为」和「实际接口行为」不一致。<code>encrypt_padded_mut</code> 的就地语义、pem-rfc7468 的 64 字符限制、forge 'NONE' 的裸 RSA——全是这类。<strong>下载 crate 源码逐行确认，比相信直觉快得多。</strong></p>
+</li>
+<li>
+<p><strong>让程序自己交代，别靠肉眼转述。</strong> 一旦陷入「报错 → 猜 → 改 → 再报错」的循环，立刻停下来做自证：日志、自检、固定输入复现、原样重放。每一层自证都把问题的包围圈缩小一层。</p>
+</li>
+<li>
+<p><strong>「同一个逻辑，A 实现成功、B 实现失败」时，差异一定藏在某个你没对比过的字节里。</strong> 把它找出来的办法就是逐字段对比，直到把内容全比完，剩下的只有内容本身。</p>
+</li>
+<li>
+<p><strong>这种 bug 不是靠聪明解决的，是靠把怀疑对象一个个钉死排除掉的。</strong> 六个小时里大部分时间在做排除法，真正动手改代码的时间可能不到半小时。</p>
+</li>
+<li>
+<p><strong>调试代码也是代码。</strong> 18 字符的密钥能闪退整个应用——debug 代码的边界条件，和生产代码一样重要。</p>
+</li>
+</ol>
+<p>最后，当那个「已登录」三个字出现的时候，感觉比任何技术结论都值钱。虽然过程很痛，但下次再遇到这种诡异的空响应，我应该能第一时间想起：先怀疑加密函数到底加密了什么。</p>
+<p>爱来自大肥鱼v4f，以及埋头苦脸修破防的我</p>
+<p>——完——</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>认证一下folo</title>
+  <link>https://flygeon.top/posts/folo/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/folo/</guid>
+  <pubDate>Tue, 04 Aug 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[folo挺好用的一个rss阅读器]]></description>
+  <content:encoded><![CDATA[<pre><code>This message is used to verify that this feed (feedId:1184753139958284288) belongs to me (userId:1184752085292154880). Join me in enjoying the next generation information browser https://folo.is.
+</code></pre>
+]]></content:encoded>
+</item>
+  <item>
+  <title>关于我是如何一步步被edge逼疯的，以及如何换到其他浏览器的</title>
+  <link>https://flygeon.top/posts/goodbye-edge/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/goodbye-edge/</guid>
+  <pubDate>Sat, 01 Aug 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[本文介绍了我和edge的前仇旧怨以及辗转反侧最终切到了Chromium，顺带介绍了下我用的一些扩展/脚本]]></description>
+  <content:encoded><![CDATA[<p>很久没更新了，最近干了一件大事，就是卸载了Win自带的edge浏览器</p>
+<h2>我与Edge的前世因缘</h2>
+<p>其实我换到其他浏览器的最主要原因就是edge太臃肿了，内存占用和嬉皮优的占用巨大，由于笔者用的主力设备还是苏菲小破本仅仅只有8G RAM，这就导致了随便挂两个网页内存占用轻松2G+，而且不知道是兼容性还是什么问题，在网页端播放哔哩哔哩视频的时候巨卡无比，而切到其他浏览器就没有这个问题</p>
+<p><strong>那么，是时候说再见了</strong></p>
+<p>当然，在告别edge大小姐之前，我还得先把数据导出来，首先是密码数据，由于我主要使用BitWerden，所以可以无缝切换到任意浏览器</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/bitwerden.webp" alt="bitwerden.webp" /></p>
+<p>再然后就是收藏夹和历史记录了，这一步我选择了<strong>Chrome Toolkit这个浏览器扩展</strong>，只需要在你目前和你想迁移的浏览器都安装这个扩展，然后在旧浏览器导出数据，再在新浏览器导入就行了，快捷省心，自此，迁移前的准备工作就算是完成了</p>
+<h2>下任接班人</h2>
+<p>在经过严肃考虑后我选择了Chromium，最开始是想考虑火狐的，因为火狐在Linux上体验确实不错，但火狐访问网页的速度堪比老奶奶蹬自行车，最终还是选择了Chromium，使用它的原因主要还是绿色和轻量，于我而言其实我是不太喜欢装一堆软件而更加喜好绿色版解压即用，而沟槽的Chrome官方只提供安装包，再加上我对Google生态需求并不是特别大，遂使用了铬浏览器</p>
+<p>btw，如果使用原版的Chromium的话可能无法正常播放B站视频，主要是因为原版不支持H.264/AAC等专利音视频解码，我使用的是<strong>Hibbiki 版本</strong></p>
+<p>换了之后静置的内存占用不到500M，即使开了一些网页也才1G出头，对比边缘浏览器强太多了</p>
+<h2>用过的一些好用的扩展/脚本</h2>
+<p>这篇文章本来到这里就结束了，但我感觉太水了还是加点内容吧，顺便分享下我使用的插件和扩展</p>
+<ol>
+<li><strong>BitWerden</strong>，一个非常好用的密码库工具，数据加密保存并且高级版支持TOTP一键填充</li>
+<li><strong>沉浸式翻译</strong>，非常好用的翻译软件，可以实时双语翻译网页内容，可以接入ai翻译质量也很高</li>
+<li><strong>空降助手</strong>，好用的B站优化工具，可以跳过视频中的软广部分</li>
+<li><strong>Adblock Plus</strong>，广告拦截清理牛皮藓特别好用</li>
+<li><strong>油猴</strong>，神中神</li>
+<li>一些油猴的脚本，大部分可以在油叉找到</li>
+</ol>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/youhoujiaoben.webp" alt="youhoujiaoben.webp" /></p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>介绍Filebase免费对象存储，以及快速搭建图床教程</title>
+  <link>https://flygeon.top/posts/filebase-and-imgbed/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/filebase-and-imgbed/</guid>
+  <pubDate>Mon, 27 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[本文主要介绍Filebase这个新的免费对象存储平台提供5 GB的免费存储空间，兼容S3端点，非常适合搭建图床服务]]></description>
+  <content:encoded><![CDATA[<p>继R2和B2后又发现了一家新的且门槛更低的对象存储——Filebase，注册仅需一个邮箱，无需绑卡，缺点就是免费版只支持私有存储桶，不过可以通过 S3 API 配合 Access Key 和 Secret Key 访问，所以只需要自己搭建一个图床即可享用</p>
+<h2>注册</h2>
+<p>访问<a href="https://console.filebase.com/">https://console.filebase.com/</a>直接使用邮箱或者Google（<s>咕噜咕噜</s>） 注册即可</p>
+<p>然后左侧选择**“Buckets”**，新建选择S3存储，取一个独一无二的名字即可</p>
+<p>然后你就可以往桶里面存东西了，但由于免费版只支持私有桶，不支持公开，所以想把它当图床用还需要一些其他手段</p>
+<p>首先找到**“Access Keys”<strong>选项卡，记住</strong>Access token和Secret key**备用，等会搭建图床用得到</p>
+<h2>Cloudflare Pages搭建图床</h2>
+<h3>部署图床</h3>
+<p>搭建图床的项目有很多，我使用的是</p>
+<p><a href="https://github.com/MarSeventh/CloudFlare-ImgBed">MarSeventh/CloudFlare-ImgBed: 🏖️ A serverless, open-source file hosting solution built on Cloudflare. Supports image hosting, secure file storage, and personal cloud drive capabilities.</a></p>
+<p>跟着部署教程走还是很容易的，Pages教程在这<a href="https://cfbed.sanyue.de/deployment/pages.html">Cloudflare Pages 部署 | CloudFlare ImgBed</a></p>
+<p>搭建完大概长这样子</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/imgbed.webp" alt="imgbed.webp" /></p>
+<h3>设置对象存储</h3>
+<p>/dashboard进入后台，默认没有账号密码记得及时修改，在系统设置-上传设置里选择s3</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/imgbed-setting.webp" alt="imgbed-setting.webp" /></p>
+<p>Endpoint填写<a href="https://s3.filebase.io">https://s3.filebase.io</a>。</p>
+<p>密钥ID和访问密钥分别对应上面提到的<strong>Access token和Secret key</strong></p>
+<p>完成之后不出意外的话就能上传图片并正确获取到直链了</p>
+<h3>接入EdgeOne的CDN</h3>
+<p>直接使用的话速度一般，可以接入腾讯EO来使用边缘节点进行加速</p>
+<p>首先先在cf pages绑定好域名，然后在EdgeOne里添加一下，汇源改成源站</p>
+<p>（没有EO账号的话可以注册一下，海外版不需要备案可以直接用）</p>
+<p>再配置下图片的浏览器和节点缓存，把缓存时间调大</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/eorule.webp" alt="eorule.webp" /></p>
+<p>这样你就得到了一个访问速度可观的免费对象存储</p>
+<p> </p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>邪道,让你的个人站点也能显示博客的文章</title>
+  <link>https://flygeon.top/posts/meke-profilessite-show-post/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/meke-profilessite-show-post/</guid>
+  <pubDate>Sun, 26 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[本文主要讲述了神人站长为了给自己的个人页集成博客的功能，但又不想迁移原有的 Astro 博客，而发动鬼脑想出了邪道手法——让个人页显示博客文章的摘要]]></description>
+  <content:encoded><![CDATA[<h2>起因</h2>
+<p>由于这个神人站长昨天灵机一动，将原有的 Svelte 框架的个人主页迁移成了 Next.js 框架，又灵机一动，不如把原有的博客功能迁移到个人主页上吧，做成一个 all in one 的个人页，但这就导致了一个问题，原有的博客已经具有SEO收录了，SEO 也有了一些积累。这时候如果强行把博客内容全部迁走，原来的收录就全白费了。再者说，Fuwari 的 UI 确实长在我的审美上，我暂时也不会去进行迁移。</p>
+<p>那干脆折中一下，直接在个人页上加一个博客板块，显示我原博客的文章信息，点击就可以跳转到原文吧。</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/blogpost.webp" alt="blogpost.webp" /></p>
+<h2>改造</h2>
+<p>这时候有人就想了，博客不是有一个RSS的东西吗？能不能通过这个东西实现我的目的呢？只需要让个人页读取到RSS的文章信息，然后实时渲染就行了。</p>
+<p>理论上这样确实可以，但 RSS 的内容含有很多干扰，信息不是很简洁，对于文章的原数据支持也不是特别好，所以我的想法是手动造一个更”高级”的RSS——造一个<strong>比 RSS 更适合我需求的 JSON 数据接口</strong></p>
+<h3>生成文章摘要的 JSON 文件</h3>
+<p>我们可以使用 Astro 的 API 端点（<code>src/pages/posts.json.ts</code>）在构建时生成文章摘要的 JSON 文件，类似于下图</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/post-json.webp" alt="post-json.webp" /></p>
+<p>这样子就可以涵盖标签分类以及封面图了</p>
+<p>这样子问题就变成了如何让个人页去解析这个Json文件。</p>
+<h3>两个方案</h3>
+<p>这时候实际上有两种选择：</p>
+<ol>
+<li>用户访问个人页的博客板块时，浏览器直接去请求 <code>flygeon.top/posts.json</code>，拿到数据后再渲染</li>
+<li>个人页在构建的时候就去抓取 <code>posts.json</code>，生成对应的静态 HTML 文件。这样用户访问的时候直接就是现成的页面，同时，这也是搜索引擎爬虫希望看到的，更有利于SEO优化~~~（虽然对于个人页SEO没什么影响就是了）~~~</li>
+</ol>
+<p>如果选择<strong>选项一</strong>，好处是可以实时更新，只需要文章发布后，用户访问个人页的文章界面，就能实时呈现</p>
+<p>但缺点就是需要解决CORS跨域问题，由于我的网站、博客和个人页使用的是两个不同的域名：个人页使用的是 re.zh.kg 这个短域，而博客使用的是 flygeon.top 这个域名，因此不能直接进行抓取，同时，这种方案在文章多的情况下，解析需要增加耗时</p>
+<p>那如果选择<strong>选项二</strong>呢，那就要考虑如何让个人业知道我的博客进行更新了</p>
+<p>考虑了一下，我选择了方案二，通过跨仓库触发<strong>repository_dispatch</strong>来实现</p>
+<p>说白了解决这个问题的核心就是<strong>跨仓库通信</strong>——博客仓库需要向个人页仓库发送一个"我更新了"的信号。</p>
+<p>GitHub Actions 提供了一个叫 <code>repository_dispatch</code> 的事件，完美解决了这个问题。它的工作流程很简单：</p>
+<blockquote>
+<p>外部系统（或另一个仓库的 Action）调用 GitHub API → 向目标仓库发送 <code>repository_dispatch</code> 事件 → 目标仓库中监听该事件的 workflow 被触发</p>
+</blockquote>
+<p>简单来讲就是一种"广播-监听"模型。我在博客仓库里广播一个"astro-updated"事件，个人页仓库监听到这个事件后就开始重新构建。</p>
+<p>既然方案敲定了，那就动手开始改造吧</p>
+<h2>修改个人页及workflow工作流</h2>
+<p>个人页修改没什么好说的，只需要让其能获取并解析到这个 Json 文件，并渲染成静态文件就行，直接丢给AI解决</p>
+<p>主要的改造还是workflow工作流方面，<code>repository_dispatch</code> 可以实现信号的传递，只需要增添一个PAT密钥即可</p>
+<p>在<code>.github/workflows</code>目录下新建一个<code>trigger-profiles-on-push.yml</code>，填上下面的内容：</p>
+<pre><code># .github/workflows/trigger-profiles-on-push.yml
+name: Trigger Profiles on Push
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/content/posts/**'
+
+jobs:
+  trigger-profiles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send trigger to profiles repository
+        run: |
+          echo "🚀 开始触发 profiles 仓库部署..."
+          
+          # 关键：明确指定目标仓库的完整路径
+          REPO_OWNER="Flygeon"   # 例如：flygeon
+          REPO_NAME="Profile-page"                   # 你的 profiles 仓库名
+          
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.PROFILES_REPO_PAT }}" \
+            "https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/dispatches" \
+            -d '{"event_type":"astro-updated"}'
+          
+          echo "✅ 触发信号已发送"
+</code></pre>
+<p>同时在你的GitHub设置里设置一个pat密钥，这样就可以实行跨仓库的广播
+再在你的另一个仓库下建一个workflow侦测这个信号：</p>
+<pre><code>name: Deploy on Astro Update
+on:
+  repository_dispatch:
+    types: [astro-updated]
+
+# ========== 关键修改：授予写入权限 ==========
+permissions:
+  contents: write  # 允许推送到代码仓库
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # ========== 新增：等待 180 秒，确保博客构建完成 ==========
+      - name: Wait for blog build to complete
+        run: |
+          echo "⏳ 检测到 Astro 更新，等待 180 秒确保博客构建完成..."
+          sleep 180
+          echo "✅ 等待完成，开始构建个人站"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.14.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Debug build output
+        run: |
+          echo "当前目录内容："
+          ls -la
+          echo "检查 out 目录："
+          if [ -d "./out" ]; then
+            echo "✅ out 目录存在，内容如下："
+            ls -la ./out
+          else
+            echo "❌ 错误：out 目录不存在！"
+            echo "尝试查找可能的输出目录："
+            find . -maxdepth 2 -type d -name "build" -o -name "public" -o -name "dist" 2&gt;/dev/null
+            exit 1
+          fi
+
+      - name: Push to build branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          publish_branch: build
+          force_orphan: true
+          commit_message: "Deploy from Astro update ${{ github.sha }}"
+
+      - name: Deploy to Cloudflare Pages
+        run: |
+          if [ -d "./out" ]; then
+            echo "🚀 开始部署到 Cloudflare Pages..."
+            npx wrangler pages deploy ./out --project-name=profiles
+            echo "✅ Cloudflare Pages 部署完成"
+          else
+            echo "❌ out 目录不存在，跳过 Pages 部署"
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+</code></pre>
+<p>同时在 GitHub 仓库 <code>Settings → Secrets and variables → Actions</code> 里加两个 secret，不加的话 workflow 会直接报错退出。</p>
+<table>
+<thead>
+<tr>
+<th>Secret</th>
+<th>说明</th>
+<th>获取方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CLOUDFLARE_API_TOKEN</code></td>
+<td>API 令牌</td>
+<td>Cloudflare Dashboard → My Profile → API Tokens → Create Token</td>
+</tr>
+<tr>
+<td><code>CLOUDFLARE_ACCOUNT_ID</code></td>
+<td>账户 ID</td>
+<td>Cloudflare Dashboard 右侧栏</td>
+</tr>
+</tbody>
+</table>
+<p>这样就完成了，值得注意的是，我在这个工作流里添加了一个等待3分钟的部分。主要原因是触发的工作流和博客构建的工作流是同时进行的。如果博客没有构建好，个人站优先触发构建，就会导致post.json并没有进行更新，也就抓取不到最新的文章信息，也算是一种曲线救国方案了，虽然说这种方案比较暴力，但确实有效，毕竟我也不追求那一两分钟时间差，也就只是需要多等一点和不够优雅了</p>
+<h2>带来的好处</h2>
+<p>这样子，个人页和博客就算建立起一个连接了，不仅不会降低 SEO 的权重，反而还有利于 SEO，如果直接把博客全文复制到个人主页，两个站点出现完全相同的文章，就会触发搜索引擎的**重复内容（Duplicate Content）**问题——搜索引擎无法判断哪个版本是原创，导致权重分散，两边的排名都可能受到负面影响。</p>
+<p>规范标签（<code>rel="canonical"</code>）可以解决这个问题，但它会让个人主页上的文章版本无法获得任何搜索排名。既然个人主页本身不需要靠文章页来获取流量，更优的选择是：<strong>只展示摘要，链接指向原文。</strong></p>
+<p>这个策略既能规避重复内容风险，又能为博客传递权重，个人主页只展示文章的标题、摘要和标签，不包含正文。搜索引擎会将其理解为“索引页”而非“内容页”，不会与博客原文产生重复内容竞争。同时，列表页上的链接为博客传递了权重，是一种双向增益的关系。</p>
+<p>到此为止，改造也算是彻底结束了，其实改造过程中还是踩了很多坑的，文章并没有过多提及，也算是给大伙提供一个参考了，这也是我能想到的一个比较优的方案了，现在只需要更新文章，博客的仓库就会自动触发构建和发送信号给个人页两个工作流~~（其实还有点小bug，有点历史遗留问题，会重复触发构建，晚点再修了）~~，个人页侦测到信号时，触发构建工作流，先等待 3 分钟，待博客构建完成之后，个人页再进行构建，构建完成后，把构建产物推送到 Cloudflare Pages。</p>
+<p>ALL，以上</p>
+<p> </p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>对个人主页进行了重构并迁移了框架</title>
+  <link>https://flygeon.top/posts/profile-reconstruct/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/profile-reconstruct/</guid>
+  <pubDate>Sat, 25 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[将原来的Svelte的个人主页重构为Next.js，大幅重构了页面，整体屎山得到优化]]></description>
+  <content:encoded><![CDATA[<p>重构后</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/profile1.webp" alt="profile1.webp" /></p>
+<p>也是对个人主页操刀重构了，原来那一版太石山了，再加上很多组件都是现搓的，导致后续维护和优化十分麻烦，于是改用了next.js</p>
+<h2>next.js好处都有啥？</h2>
+<p>改用了 Next.js 之后，最大的感触就是有很多现成的组件可以直接引用，不用自己动手造轮子了，写起来非常舒服。而且得益于良好的首屏加载优化，实际的用户体验肯定是要比原来的那个站点更好的。</p>
+<p>新站点仍然延续旧站的暗黑风格，同时将原来的圆角UI改成了方形(深受磁贴效果影响)，感觉整体来说还是比以前更耐看一点（）（）（）</p>
+<h2>调整</h2>
+<p>btw，这次还创新地新增了标题点阵风格，鼠标移动到点阵会有排斥崩坏的效果，这点也是非常的 amazing 了。背景动画也改用了斐波那契图案的排列，同时也是经由克劳德大人精心优化了页脚和设计，看起来也就更耐用了</p>
+<p>同时也对页面滚动的元素加载动效做出了优化，现在会有淡出淡入的模糊效果，<s>爱来自克劳德老师傅</s></p>
+<p>值得一提的是重构之后的版本是目前GitHub仓库的main分支，而旧站点则迁移到了old分支，欢迎各位前来学习</p>
+<h2>小巧思</h2>
+<p>对站点做了点小巧思设计，最大化地利用了空间：</p>
+<ol>
+<li>长按右下角“返回顶部”的按钮，可以展开一个二级菜单，显示音乐播放器；</li>
+<li>双击“返回顶部”的按钮，则可以切换下一首歌曲。</li>
+</ol>
+<p>以后也会把这个按钮做出更多新花样来。</p>
+<p>同时还留下了一点小彩蛋，等待大家挖掘（）</p>
+<h2>END</h2>
+<p>其余也没啥好说的了喵，大伙可以访问**<a href="https://re.zh.kg">re.zh.kg</a>**来进行预览</p>
+<p>也欢迎各位来给我点点star谢谢喵</p>
+<p><strong><a href="https://github.com/Flygeon/Profile-page">https://github.com/Flygeon/Profile-page</a></strong></p>
+<p>1</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>记一次导航栏栏无法展开二级菜单的bug修复</title>
+  <link>https://flygeon.top/posts/bug/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/bug/</guid>
+  <pubDate>Wed, 22 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[屎山代码发力了，排查半天发现压根不是导航栏的问题，真凶另有其人]]></description>
+  <content:encoded><![CDATA[<h2>起因：万恶之源</h2>
+<p>事情的起因是访问unjal的博客的时候发现在我的电脑上测试，导航栏上的按钮根本无法触发展开二级菜单，但是经过我的<s>拷打</s>，友好的询问过后，发现其他设备上展开都正常，且我们用的都是同一个浏览器，内核版本相同，到底是什么原因导致我的设备无法正常显示呢？</p>
+<h2>一阶：无法修复？</h2>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/image.webp" alt="" /></p>
+<p>经过unjal的严肃修复（调戏ds和Gemini），发现问题仍然存在且仅限我的电脑存在，我就要来了anvigation的源码进行排查，但经过 GPT 老师的身形调教之后，问题不能说一点没解决吧，但只能说解决了一点，导航栏一共 4 个按钮，位于偏右侧的两个按钮可以正常展开，但左侧两个按钮仍未展开。经过我的追问，这个问题始终得不到任何进展。问题到这里似乎陷入了停滞，那么真凶到底是谁呢？</p>
+<h2>二阶：灵机一动</h2>
+<p>偶然一次测试，我发现如果在页面没有完全加载的时候，所有的导航栏按钮都是可以正常展开二级菜单的；但是当页面加载完成之后，导航栏就无法正常展开了。</p>
+<p>于是我断定，肯定是因为界面中的某个元素，遮挡了原来二级菜单的展开判定，我把我的发现报告给了 GPT 老师，GPT 老师给我了一些方案，让我缩小问问题的范围。经过我的测试，发现Mizuki主题会默认加载Live2d小人，从加载L2d小人的阶段开始，顶部导航栏的按钮就无法展开了，GPT老师火速分析了一下问题所在，然后发现问题果真如此，其加载高度高达600px，因此在分辨率较低的设备上测试的时候，会刚好遮挡住顶栏的按钮，虽然unjal的博客禁用了l2d功能，但iframe层仍在生效，于是这个问题到这里就算是正式解决了</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/ee30fe2d7454bb8bbb70590180ed3e54.webp" alt="ee30fe2d7454bb8bbb70590180ed3e54.webp" /></p>
+<h2>三阶：完</h2>
+<p>只能说屎山代码发力这一块，不是注意力惊人，这个小众问题估计还是得不到解决</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>今天是伟大的0721日，别忘了0721</title>
+  <link>https://flygeon.top/posts/0721/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/0721/</guid>
+  <pubDate>Tue, 21 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[私のOOニ一よ見てください！]]></description>
+  <content:encoded><![CDATA[<p>今天是伟大的0721纪念日，伟大的魔女0D00提醒您，享受暑假之余别忘记0721</p>
+<p>オナニ一万歳！</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>简单做了一个 Flutter 架构开发的跨平台媒体库,简单记录一下开发历程</title>
+  <link>https://flygeon.top/posts/flutter/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/flutter/</guid>
+  <pubDate>Fri, 17 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[由于神人微软的 Windows 媒体管理过于混乱，音频、视频、图片各管各的，导致用起来非常难受。于是我就简单写了一个媒体库，使用 Material Design 风格将这些媒体聚集在一起，方便了管理。]]></description>
+  <content:encoded><![CDATA[<h2>开发缘由</h2>
+<p>想要开发这个软件，其实很早之前就有规划了。因为 Windows 的媒体管理实在是过于混乱了，音频、视频、图片各管各的，并且默认的视频播放器就有两个，非常不便于管理。于是我就在想，能不能有一个应用直接将这些媒体全部聚集在一起，方便管理，就有了这个项目</p>
+<p>项目确定之后，就该考虑怎么开发？拿什么框架开发？适用于什么平台？我想过用 Rust 开发，因为 Rust 在性能优化上做得确实不错。但它的语言实在是太复杂了，而且编译比较困难，目前还在学习中。由于我比较喜欢 Material Design 的设计风格，再加上用过一些 Flutter 开发的应用，感觉还挺不错的，于是就使用 Flutter 构建了这个项目。</p>
+<h2>Vibe Coding，启动！</h2>
+<p>安装好 Flutter 的环境依赖，直接打开 Claude Code，大螃蟹（大肥鱼）给我立项启动！</p>
+<p>简单提了一下要求之后，做出了第一个 demo，但实际效果并不是特别好。确实是有 Material Design 风格，但不会显示视频缩略图，播放界面也做得比较简陋。但这只是第一版，随后经过多次迭代优化后，功能渐渐完善起来了，粗略模仿了 Apple Music 的播放器，写了动态取色，优化性能问题等等。</p>
+<p>再后来就想到跨平台开发了，既然都用 md 风格了，何不兼容 Android 呢？顺手编译一下 apk</p>
+<p>然后就又是漫无止境的调试工作，找 bug 修 bug 出现新的 bug，做触屏优化，权限适配</p>
+<h2>发布</h2>
+<p>项目源码与发布信息：<a href="https://github.com/Flygeon/LumiLuna">Flygeon/LumiLuna</a></p>
+<p>给主播点点 Star 喵</p>
+<p> </p>
+<p> </p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>一次 Swup 客户端导航的踩坑：从整页刷新到目录消失</title>
+  <link>https://flygeon.top/posts/16/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/16/</guid>
+  <pubDate>Tue, 14 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[记录修复博客导航 bug 的全过程——删掉一个看似多余的整页刷新脚本后，目录(TOC)反而消失了，最终发现根因是侧边栏不在 Swup 的容器列表中。]]></description>
+  <content:encoded><![CDATA[<p>总所不周知，我的博客自从上线了banner图功能之后就出现神必bug，具体表现为在文章界面点击导航栏按钮回到主页时会自动触发刷新</p>
+<p>由于Fuwari这个博客主题使用了<code>Swup</code>这个东西，这是一个为服务端渲染（SSR）网站设计的页面过渡库，它能让你的网站在页面切换时不再“刷新闪白”，而是平滑过渡。所以按照正常逻辑，点击按钮返回到主页时应该是直接过渡的，所以很大概率是DS魔改的时候改出bug了</p>
+<h2>第一章：整页刷新</h2>
+<p><strong>症状</strong>：在文章页点顶部导航栏的「主页」返回时，页面会先平滑过渡一下，紧接着<strong>整个页面又重新加载了一遍</strong>（明显的白屏/重绘）。其他跳转（比如主页点进文章）反而正常。</p>
+<p>DS给我的说法是由于Swup拦截失败导致直接触发访问 / 目录导致的，但经过DS的神秘修理问题仍然存在，于是我果断寻求免费打白工的hy3排查一下问题</p>
+<h2>第二章：hy3神力</h2>
+<p>排查很简单——这种「Swup 过渡后又来一次硬刷新」的现象，八成是某段 JS 里写了 <code>location.reload()</code>。全局搜了一下，整个 <code>src</code> 里只有一处 <code>window.location.reload()</code>，在 <code>src/components/widget/SideBar.astro</code> 的脚本里：</p>
+<pre><code>let wasPostPage = isPostPath(window.location.pathname);
+
+function updateSidebar() {
+    const sticky = document.getElementById('sidebar-sticky');
+    if (!sticky) return;
+    const nowIsPost = isPostPath(window.location.pathname);
+
+    if (nowIsPost) {
+        // 进入文章页：从 DOM 提取标题，手动重建目录
+        // ...
+        wasPostPage = true;
+    } else {
+        if (wasPostPage) {
+            window.location.reload();   // ← 罪魁祸首
+            return;
+        }
+    }
+}
+window.swup?.hooks?.on('page:view', updateSidebar);
+</code></pre>
+<p>逻辑很清楚：Swup 完成一次客户端导航后会触发 <code>page:view</code> 事件，这段钩子检查一下「现在是不是文章页」：</p>
+<ul>
+<li>主页 → 文章：<code>nowIsPost=true</code>，把 <code>wasPostPage</code> 置 true，不刷新；</li>
+<li>文章 → 文章：<code>nowIsPost=true</code>，不刷新；</li>
+<li><strong>文章 → 主页/归档/关于</strong>：<code>nowIsPost=false</code> 且 <code>wasPostPage=true</code>，命中 <code>else</code>，执行 <code>reload()</code>。</li>
+</ul>
+<p>所以它只在「从文章页离开」时触发——这也正好解释了为什么我最先注意到的是「返回主页会刷新」。</p>
+<h2>第一段修复：删掉那段脚本</h2>
+<p>一开始我以为这段脚本完全是多余的。理由也很充分：</p>
+<ul>
+<li>侧边栏 <code>SideBar</code> 是渲染在 <code>&lt;main&gt;</code> 内部的，而 <code>main</code> 正是 Swup 的容器之一，每次导航 Swup 应该已经把侧栏整段替换成目标页面服务端渲染好的版本了；</li>
+<li><code>@swup/astro</code> 自带的 scripts 插件会自动重跑脚本、重新 hydrate 那些 <code>client:only</code> 的 Svelte 组件（侧栏里的 RouteSwitch / Categories / UmamiStats 都是），不需要硬刷新兜底。</li>
+</ul>
+<p>于是我直接把整个 <code>&lt;script&gt;</code> 块删了。刷新问题确实消失了——然后新 bug 出现了。</p>
+<h2>第二段：目录(TOC)消失了</h2>
+<p><strong>症状</strong>：删掉脚本后，点进任何一篇文章，左边侧栏<strong>不再显示目录</strong>了，而是继续显示主页那一套 widgets（分类、统计等）。</p>
+<p>这时候我才重新仔细看了布局文件 <code>MainGridLayout.astro</code>，发现一个之前被我忽略的事实：</p>
+<blockquote>
+<p><code>**#sidebar-sticky</code> 并不在 Swup 的容器列表里。**（DS干的好事）</p>
+</blockquote>
+<p>Swup 当时只配置了这两个容器（<code>astro.config.mjs</code>）：</p>
+<pre><code>swup({
+    containers: ["main", "#toc"],
+    // ...
+})
+</code></pre>
+<p>也就是说，Swup 在客户端导航时<strong>只替换 <code>main</code> 和 <code>#toc</code> 两块内容，侧边栏压根不参与替换</strong>。它永远停留在首次整页加载时的状态：</p>
+<ul>
+<li>首次从主页加载 → 侧栏是 widgets；</li>
+<li>之后无论你 Swup 导航到哪，侧栏都还是那套 widgets，不会变成文章的目录。</li>
+</ul>
+<p>那原来的 <code>updateSidebar</code> 脚本到底是干嘛的？现在清楚了——<strong>它根本不是多余的，而是人工补齐了 Swup 没做好的事</strong>：</p>
+<ul>
+<li>进文章页时，客户端从 DOM 现抠标题拼出目录；</li>
+<li>离开文章页时，因为 widgets 是 Svelte 岛屿不好重建，干脆用 <code>reload()</code> 让服务端重新渲染正确版本。</li>
+</ul>
+<p>换句话说，那个烦人的刷新，是「侧栏不在 Swup 容器内」这个更底层问题的拙劣补丁。我之前删代码时只看到了补丁的丑，没看到补丁底下那个洞。</p>
+<h2>最终修复：把侧栏交给 Swup</h2>
+<p>既然根因是「侧栏没被 Swup 接管」，正确的做法就不是用 JS 手动打补丁，而是让 Swup 自己来替换它。把 <code>#sidebar-sticky</code> 加进容器列表即可：</p>
+<pre><code>// astro.config.mjs
+swup({
+    containers: ["main", "#toc", "#sidebar-sticky"],
+    // ...
+})
+</code></pre>
+<p>改完之后，每次导航 Swup 都会把 sticky 侧栏整段换成目标页面服务端渲染好的版本：</p>
+<ul>
+<li>文章页 → 显示 <code>SideBarTOC</code>（服务端按本页 headings 渲染，绝对不会错）；</li>
+<li>非文章页 → 显示 RouteSwitch / Categories / UmamiStats；</li>
+<li>文章 ↔ 文章 → 目录自动更新为当前文章。</li>
+</ul>
+<p><code>Profile</code> 组件在 <code>#sidebar-sticky</code> 之外（在 <code>#sidebar</code> 里），所以不会跟着被重复替换，避免每次导航头像都闪一下。那段 <code>updateSidebar</code> 脚本至此可以彻底删掉，也不需要 <code>reload()</code> 了。</p>
+<h2>顺手的安全网：transition.css</h2>
+<p>修这个 bug 的过程中还顺手处理了一个相关隐患。<code>src/styles/transition.css</code> 里原来有一条规则：</p>
+<pre><code>/* 之前 */
+html.js-loaded .onload-animation {
+    opacity: 0;
+}
+</code></pre>
+<p>它的本意是：元素默认透明，等 <code>js-loaded</code> 加到 <code>&lt;html&gt;</code> 上后，靠一次性的 <code>fade-in-up</code> 动画淡入。问题在于 <code>js-loaded</code> 只在首屏由 <code>&lt;head&gt;</code> 里的内联脚本加一次，而 Swup 只换容器、不重跑 <code>&lt;head&gt;</code>。所以客户端导航换进来的新内容，那个一次性动画<strong>不会可靠地重放</strong>，元素就卡在 <code>opacity:0</code> 看不见。</p>
+<p>原来的 <code>reload()</code> 同样把这个问题盖住了——整页刷新会重置一切。既然现在不再依赖 reload，我就把这条静态 <code>opacity:0</code> 删了，让 <code>.onload-animation</code> <strong>默认就是可见的</strong>，动画只在能跑的时候提供入场淡入：</p>
+<pre><code>/* 现在 */
+.onload-animation {
+    animation: 300ms fade-in-up;
+    animation-fill-mode: forwards;
+}
+html:not(.js-loaded) .onload-animation {
+    animation: none;
+    opacity: 1;
+}
+</code></pre>
+<p>这样即使某次 Swup 导航后动画没重放，内容也按自然状态可见，不会再出现「内容凭空消失」。</p>
+<h2>复盘</h2>
+<p>一个 bug，三段修复，踩了两个坑：</p>
+<ol>
+<li><strong>Swup 只替换 <code>containers</code> 里的内容。</strong> 任何在客户端导航后「状态没更新」的怪现象，先想一下它所在的 DOM 节点到底在不在 Swup 容器里。不在容器里，它就会永远停留在首次加载的状态——这正是目录消失的真正原因。</li>
+<li><strong>删代码前，先确认它「为什么存在」。</strong> 那段 <code>reload()</code> 看着像冗余的暴力兜底，实则是「侧栏不在容器内」这个架构问题的临时补丁。直接删掉而不解决根因，bug 只是换了个马甲（从「刷新」变成「目录不显示」）。</li>
+<li><strong>一次性入场动画 + 客户端路由 = 隐形风险。</strong> 凡是「靠 JS 加 class 才可见」的内容，都要想清楚在客户端导航后这个 class/动画是否还会按预期生效。最稳妥的做法是「默认可见，动画只是锦上添花」。</li>
+</ol>
+<h2>我想说的</h2>
+<p>只能说主责在DS，我还是太相信Vibe coding神力了直接将博客全权交给Claude Code（DS风味），导致写出一堆bug</p>
+<p>不过，能跑就行（（</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>关于主站迁移至cloudflare的说明</title>
+  <link>https://flygeon.top/posts/15/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/15/</guid>
+  <pubDate>Sun, 12 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[出于后续博客的发展（恰饭）考虑，决定迁移至CF]]></description>
+  <content:encoded><![CDATA[<p>此前博客是部署到Vercel上作为主站使用的，因为Vercel在大陆地区访问速度还不错，但由于Vercel免费计划是不允许商用的，也就是说后续博客想要恰饭（投喂广告）时就不能白嫖Vercel了T_T</p>
+<p>于是，我就觉得把主站迁移至CF，顺便研究了下优选这个东西，现在国内访问的话速度应该也还不错</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>开发了一个个人导航页</title>
+  <link>https://flygeon.top/posts/14/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/14/</guid>
+  <pubDate>Sat, 11 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[一款基于 Svelte 5 + Vite 6 的暗黑风个人导航页，具有包含动态粒子特效、音乐播放器、博客文章时间线显示等功能，可以通过 Cookie 持久化用户设置，适配移动端与桌面端。]]></description>
+  <content:encoded><![CDATA[<p>最近简单开发了一些小项目，其中一个就是这个个人导航页</p>
+<p>经过和大D老师的斗智斗勇也是做得差不多了，大伙可以访问<a href="https://re.zh.kg/">re.zh.kg</a>来进行预览</p>
+<p>也欢迎各位来给我点点Star<a href="https://github.com/Flygeon/Profile-page">https://github.com/Flygeon/Profile-page</a></p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>哎我去这个Pages CMS真神了</title>
+  <link>https://flygeon.top/posts/13/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/13/</guid>
+  <pubDate>Sat, 04 Jul 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[通过向你的静态博客仓库导入Pages CMS实现在浏览器里优雅地管理你的文章]]></description>
+  <content:encoded><![CDATA[<p>如标题所言，我们在静态博客写文章时时，正常情况下都是通过本地建立md文章通过ide或者黑曜石等编写，然后push到仓库的，但现在Pages CMS帮我们代替了这个活，只需要简单配置就可以放空大脑了</p>
+<h2>原理</h2>
+<p>Pages CMS通过一个放置在仓库根目录的 <code>.pages.yml</code> 来声明式配置所有功能。包括你的图片、文章数据、命名格式</p>
+<p>然后通过预定义的行为去读写Github，创建，编辑文件，创建Action等等，用人话来说就是把Github当数据库用</p>
+<p>也就是说，通过Pages CMS这个媒介，我们完全可以摒弃传统派做法，将整个流程交给了网页~~（传统写文方式已经过时了，现在像我们走来的是维新派）~~</p>
+<h2>如何使用</h2>
+<p>访问<a href="https://app.pagescms.org/">https://app.pagescms.org/</a> ，通过你的GitHub一键登录，授权一下，就能在pagescms里看到你的仓库地址了，选择你的博客仓库，初次使用的话还需要配置一下，在configuration选项卡里可以配置，我的建议是直接把docs网址丢给ai让它帮你写，这里贴一下我的提示词，仅供参考</p>
+<pre><code>[https://pagescms.org/docs/configuration/](https://pagescms.org/docs/configuration/) 阅读这篇文章，帮我写适用于astro博客fuwari主题的配置，我的图片存储在/image里，文章在src\content\posts里，文章结构示例：---  
+title: 0成本将你的OneDrive部署至互联网,以及博客的一些小规划  
+published: 2026-06-14  
+description: 使用CVercel和OneDrive API，无需服务器和域名即可将OneDrive网盘部署到互联网，实现文件在线预览和下载  
+image: "[https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/9-cover.webp](https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/9-cover.webp)"  
+tags: [Vercel, OneDrive, 网盘, 教程]  
+category: 教程  
+draft: false  
+---+文章正文
+</code></pre>
+<p>写好之后直接贴进配置里，你就可以优雅地在网页端写文章了，就和动态博客的编辑器一样，包括图片也是直接拖进窗口里就行，节省了非常多的时间</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>部署你的Astrbot QQ机器人吧</title>
+  <link>https://flygeon.top/posts/11/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/11/</guid>
+  <pubDate>Thu, 18 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[从零开始部署一个功能强大的AstrBot QQ机器人，支持多种AI模型接入，实现智能群聊回复、私聊对话、自定义插件扩展等功能，成为赛博群老婆（（]]></description>
+  <content:encoded><![CDATA[<p>之前小群看见了群主整过bot，于是自己也做了个玩玩，正好分享一下部署的心得/过程</p>
+<p>部署过程可以参考<a href="https://docs.astrbot.app/">AstrBot 官方文档</a>
+btw,这个项目也是可以在Windows端/Android端部署的，但是为了稳定着想，最好还是整一个云服务器，现在大厂的VPS活动价格也还可以了</p>
+<p>但话又说回来了，秉承着能省就省的原则，我直接开了一台2H2G的NET小机，虽然官方文档建议配置是2H4G,但实测，2H2G不跑其他项目的话也够了，
+我用的是Sadidc的机子（无广确实是自己用的，5CNY/M，有需要的可以用下我的链接https://sadidc.com/aff/HIQQIVLE）
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/11-1.webp" alt="图1" />
+<strong>在只开了AstrBot、NapCat和1Panel的情况下的占用情况</strong></p>
+<h2>部署教程（基于net机）</h2>
+<p>OK来到部署教程环节，首先shell连上自己的机子，先部署1Panel</p>
+<pre><code># 安装1Panel
+bash -c "$(curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh)"
+</code></pre>
+<p>中途会问你是否安装Docker，y就好了，部署好后会给一个登录地址，在idc建立net映射，将1Panel的端口映射出去，使用映射的端口登录后即可看到1Panel的界面</p>
+<p>我将使用Docker部署整个项目，按照官方的做法
+首先，需要 Clone AstrBot 仓库到本地：</p>
+<pre><code>git clone https://github.com/AstrBotDevs/AstrBot
+cd AstrBot
+</code></pre>
+<p>然后，运行</p>
+<pre><code>sudo docker compose up -d
+</code></pre>
+<p>但由于天朝网络的影响，建议自己动用魔法把AstrBot下载好手动上传VPS解压
+使用下面的命令查看 AstrBot 的日志：</p>
+<pre><code>sudo docker logs -f astrbot
+</code></pre>
+<p>这样得到AstrBot的访问目录，同理建立端口映射，默认应该是6185端口。</p>
+<p>如果需要接入QQ的话还需要部署NapCat，先vim一下/etc/docker/daemon.json
+写入以下内容：</p>
+<pre><code>{
+"registry-mirrors":["https://docker.hpcloud.cloud",
+"https://docker.m.daocloud.io",
+"https://docker.unsee.tech",
+"https://docker.1panel.live",
+"http://mirrors.ustc.edu.cn",
+"https://docker.chenby.cn",
+"http://mirror.azure.cn",
+"https://dockerpull.org",
+"https://dockerhub.icu",
+"https://hub.rat.dev",
+"https://proxy.1panel.live",
+"https://docker.1panel.top",
+"https://docker.m.daocloud.io",
+"https://docker.1ms.run",
+"https://docker.ketches.cn"]
+}
+</code></pre>
+<p>重启Docker
+systemctl daemon-reload
+systemctl restart docker
+再执行以下命令部署NapCat：</p>
+<pre><code>docker run -d \
+-e NAPCAT_GID=$(id -g) \
+-e NAPCAT_UID=$(id -u) \
+-p 3000:3000 \
+-p 3001:3001 \
+-p 6099:6099 \
+--name napcat \
+--restart=always \
+mlikiowa/napcat-docker:latest
+</code></pre>
+<p>但我这样会报错，很神奇，于是我在1Panel里手动部署了。
+:spoiler[<s>什么你问我之前为什么不直接在1Panel里部署AstrBot？这不是更方便吗，问就是忘了</s>]</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/11-2.webp" alt="图2" />
+参考这个，暴露3000、3001和6099端口</p>
+<p>其中6099是面板，需要在idc里映射出来</p>
+<p>docker logs napcat进行扫码登录你的QQ小号</p>
+<p>访问你的面板地址
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/11-3.webp" alt="图3" /></p>
+<p>先将6199端口映射出来，新建一个Websocket Client，url填写<code>ws://映射后的地址:端口/ws</code>
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/11-4.webp" alt="图4" /></p>
+<p>接着一个闪现登录AstrBot，sudo docker logs -f astrbot查看默认账号密码
+登录后添加机器人，选择OneBot v11，默认
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/11-5.webp" alt="图5" />
+看到这个提示就是配置好了，再配置好AI模型即可，这里不再赘述。</p>
+<p>不出意外的话你的<s>赛博老婆</s>，bot就部署好了，开始你的游玩吧~
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/11-6.webp" alt="图6" /></p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>关于我的常用软件</title>
+  <link>https://flygeon.top/posts/12/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/12/</guid>
+  <pubDate>Thu, 18 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[总结一下我的一些常用软件]]></description>
+  <content:encoded><![CDATA[<p>如标题所言，我将列出我的一些常用软件予以备忘，主要原因是由于Surface的发热量在Windows下过大，不得已我将把我的电脑主力切到Linux。</p>
+<h2>软件</h2>
+<table>
+<thead>
+<tr>
+<th>软件类型</th>
+<th>软件名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>浏览器</td>
+<td>Edge，Chrome</td>
+<td>主力浏览器，泛用性广，用习惯了数据啥的都在就不想换了（（</td>
+</tr>
+<tr>
+<td>编辑器</td>
+<td>VS Code，Trae</td>
+<td>代码编辑主力，接入cli以及MCP挺好用的</td>
+</tr>
+<tr>
+<td>终端</td>
+<td>meatshell</td>
+<td>rust重构后的final shell</td>
+</tr>
+<tr>
+<td>笔记</td>
+<td>Obsidian</td>
+<td>黑曜石太强大了</td>
+</tr>
+<tr>
+<td>输入法</td>
+<td>Win自带，微信输入法</td>
+<td>中文输入</td>
+</tr>
+<tr>
+<td>截图/录屏/播放器</td>
+<td>Pixin，LocalSend，OBS，VLC，MPC-HC</td>
+<td>好用，不过截图一般我还是习惯win+shift+s</td>
+</tr>
+<tr>
+<td>音乐相关</td>
+<td>SV，Vocaloid4，X studio，openutau，FLstudio</td>
+<td>这个没什么好说的</td>
+</tr>
+<tr>
+<td>建模相关</td>
+<td>Blender，mmd，PmxEditor</td>
+<td>改模这一块</td>
+</tr>
+<tr>
+<td>玩机相关</td>
+<td>搞机助手，刷机匣，爱思助手，FastbootEnhance</td>
+<td>无需多言</td>
+</tr>
+</tbody>
+</table>
+]]></content:encoded>
+</item>
+  <item>
+  <title>0成本将你的OneDrive部署至互联网,以及博客的一些小规划</title>
+  <link>https://flygeon.top/posts/10/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/10/</guid>
+  <pubDate>Sun, 14 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[使用CVercel和OneDrive API，无需服务器和域名即可将OneDrive网盘部署到互联网，实现文件在线预览和下载]]></description>
+  <content:encoded><![CDATA[<p>大概去年吧，看到2x.nz上分享了OneDrive E3的车，也是火速上车了，当然本次存活时间也比较短，现在已经封车了。之前也嫖过E5的不过被收回了（（</p>
+<p>然后照着<code>https://github.com/spencerwooo/onedrive-vercel-index</code>这个项目部署了网页但最近发现不知道为啥G掉了，会爆404错误，正好重新部署一遍正好做个教程</p>
+<h2>部署环节</h2>
+<p>首先Fork这个项目到你的仓库，在config文件夹里可以修改配置</p>
+<p>首先打开<code>config/api.config.js</code>关键修改这里的内容</p>
+<pre><code>module.exports = {
+  // The clientId and clientSecret are used to authenticate the user with Microsoft Graph API using OAuth. You would
+  // not need to change anything here if you can authenticate with your personal Microsoft account with OneDrive International.
+  clientId: '6c59f174-eca5-4874-b923-407f97fd69f0',
+  obfuscatedClientSecret: 'U2FsdGVkX19t/ItgvXWJqOoTPm65cllQNmBY4KcUGYWTZE7a2b8u3PltXBrFvM3uUHHtVROuB1MUZm7QBTipgw==',
+
+  ......
+}
+</code></pre>
+<p>clientId和Secret都在<a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade">Microsoft Azure App registrations</a>获取</p>
+<p>参考<a href="https://ovi.swo.moe/zh/docs/advanced#%E4%BD%BF%E7%94%A8%E4%BD%A0%E8%87%AA%E5%B7%B1%E7%9A%84-client-id-%E4%B8%8E-secret">作者的说明文档</a></p>
+<p>也可以参考https://github.com/iRedScarf/onedrive-index这个项目，但很奇怪我卡在了鉴权这一步</p>
+<p>在<code>config/site.config.js</code>这里可以修改标题和路径，默认会分享你OneDrive里Public文件夹里的内容</p>
+<p>操作好后直接导入到Vercel里，这时候会有报错，因为还没连接后端数据库
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/10-1.webp" alt="图" /></p>
+<p>前往 <a href="https://vercel.com/integrations/upstash">Vercel Upstash 集成页面</a> 点击 Install，绑定你的项目，然后重新部署</p>
+<p>不出意外的话你会发现又报错了。。。
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/10-2.webp" alt="图2" /></p>
+<p>其实这是Node.js 版本导致的，来到settings ——&gt; Build and Deployment ——&gt; Node.js Version里将版本改到20.x然后在重新部署
+<img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/10-3.webp" alt="图3" /></p>
+<p>All done.</p>
+<h2>规划</h2>
+<p>网站以后的资源应该会放到pan.flygeon.top里分享</p>
+<p>目前我有三个常用的域名，以后flygeon.top会作为主域名使用，一些项目都会绑定这个域名，flygeon.eu.org会作为反代等项目使用，以及re.zh.kg会作为短链接使用（待完成）</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>基于github托管图片</title>
+  <link>https://flygeon.top/posts/9/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/9/</guid>
+  <pubDate>Sat, 13 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[将图片放置到github仓库，得到直链访问]]></description>
+  <content:encoded><![CDATA[<p>:::tip
+请不要过度滥用这个项目，仅提供思路。
+:::</p>
+<p>之前就在想解决图床的问题，使用第三方图床的话会有失效的风险，毕竟不是存储在自己的服务器上，那么有没有什么解决办法呢？</p>
+<p>兄弟有的有的，经过我的探索，我发现完全可以将图片直接放到github仓库上，白嫖GitHub。</p>
+<p>本站使用的是基于Astro的博客，项目本身就是托管在gh上的，所以我在项目的根目录下创建了一个<code>image</code>文件夹，用来存放图片。</p>
+<p>这样push后就将图片一并传到gh上了，在自己的仓库中可以找到图片的直链地址，
+例如我的某张图片的url就是<code>https://raw.githubusercontent.com/Flygeon/Astro/refs/heads/main/image/6-cover.png</code>。</p>
+<h2>反代图片</h2>
+<p>但是这个方法有个很大的问题，由于天朝网络的因素，国内访问就和窜西一样时好时坏，所以我们还需要构建一个反代项目来解决这个问题。这点可以通过大善人Cloudflare来实现。</p>
+<p>新建一个Cloudflare Pages项目就够了，不需要挤占Workers资源。
+新建一个<code>_worker.js</code>文件，往里面填充如下代码：</p>
+<pre><code>// _worker.js - 完整的 raw.githubusercontent.com 反向代理
+// 部署到 Cloudflare Pages 即可使用
+
+// 配置区域（可根据需要修改）
+const TARGET_HOST = "raw.githubusercontent.com";      // 目标主机
+const ENABLE_CORS = true;                             // 是否启用跨域资源共享
+const ENABLE_CACHE = true;                            // 是否启用缓存（默认缓存 1 天）
+const CACHE_TTL = 86400;                              // 缓存时间（秒），默认 1 天
+const ALLOWED_REFERERS = [];                          // 防盗链白名单，留空则不检查，例如 ["https://yourdomain.com"]
+
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      // 1. 防盗链检查（可选）
+      if (ALLOWED_REFERERS.length &gt; 0) {
+        const referer = request.headers.get("Referer");
+        if (referer) {
+          let isAllowed = false;
+          for (const allowed of ALLOWED_REFERERS) {
+            if (referer.startsWith(allowed)) {
+              isAllowed = true;
+              break;
+            }
+          }
+          if (!isAllowed) {
+            return new Response("Forbidden", { status: 403 });
+          }
+        }
+      }
+
+      // 2. 构建目标 URL
+      let url = new URL(request.url);
+      url.protocol = "https";
+      url.hostname = TARGET_HOST;
+      // 保持原始路径、查询参数不变
+
+      // 3. 创建新的请求，复制原始请求的方法、头、正文
+      let newRequest = new Request(url, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        // 保留请求的 duplex 属性（用于流式传输）
+        duplex: "half"
+      });
+
+      // 4. 发送请求到 GitHub raw 服务器
+      let response = await fetch(newRequest);
+
+      // 5. 准备响应头（复制原始响应头并修改）
+      let responseHeaders = new Headers(response.headers);
+
+      // 6. 启用 CORS（跨域资源共享）
+      if (ENABLE_CORS) {
+        responseHeaders.set("Access-Control-Allow-Origin", "*");
+        responseHeaders.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        responseHeaders.set("Access-Control-Allow-Headers", "Content-Type");
+        // 处理预检请求（OPTIONS）
+        if (request.method === "OPTIONS") {
+          return new Response(null, {
+            status: 204,
+            headers: responseHeaders
+          });
+        }
+      }
+
+      // 7. 启用缓存（通过 Cache-Control 头）
+      if (ENABLE_CACHE &amp;&amp; response.status === 200) {
+        // 如果原始响应没有 Cache-Control，则添加
+        if (!responseHeaders.has("Cache-Control")) {
+          responseHeaders.set("Cache-Control", `public, max-age=${CACHE_TTL}`);
+        }
+      }
+
+      // 8. 可选：隐藏代理标识（假装自己是原始服务器）
+      responseHeaders.set("Via", "");               // 移除 Via 头
+      responseHeaders.delete("CF-Cache-Status");    // 移除 Cloudflare 特有头
+
+      // 9. 返回最终响应
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders
+      });
+
+    } catch (error) {
+      // 错误处理：返回 500 错误信息
+      return new Response(`Proxy Error: ${error.message}`, { status: 500 });
+    }
+  }
+};
+</code></pre>
+<p>然后自定义你的域名，测试一下访问，All done.</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>做了一个可以让大家视奸我的网站</title>
+  <link>https://flygeon.top/posts/8/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/8/</guid>
+  <pubDate>Mon, 08 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[欢迎大家访问me.flygeon.top来视奸我喵]]></description>
+  <content:encoded><![CDATA[<h2>缘起</h2>
+<p>没别的，之前就看到有类似的项目了，不过那个项目是部署在Docker上的，需要依赖服务器运行，我就在想能不能前后端分离，将项目直接部署到EdgeOne或者Vercel上。</p>
+<p>于是有了这个项目：<strong>Looking-me</strong>
+::github{repo="Flygeon/Looking-me"}</p>
+<h2>效果预览</h2>
+<p><img src="https://raw.githubusercontent.com/Flygeon/Astro/refs/heads/main/image/8-1.png" alt="预览" /></p>
+<h2>架构设计</h2>
+<pre><code>flowchart LR
+    subgraph A["本地采集端"]
+        A1[Python]
+        A2[win32gui 捕获窗口]
+        A3[每 30s 心跳]
+    end
+
+    subgraph B["云端服务"]
+        B1[Supabase]
+        B2[PostgreSQL]
+        B3[Storage 图标]
+    end
+
+    subgraph C["前端展示"]
+        C1[EdgeOne 静态页面]
+        C2[HTML/CSS]
+        C3[supabase-js]
+    end
+
+    A --&gt;|REST API 写入 + 图标上传| B
+    B --&gt;|Realtime 订阅变更| C
+</code></pre>
+<h3>1. 本地采集端 (Python)</h3>
+<p>用 <code>win32gui</code> 获取当前活动窗口标题，<code>psutil</code> 获取进程名，通过 Supabase REST API 写入：</p>
+<pre><code># 获取活动窗口
+hwnd = win32gui.GetForegroundWindow()
+title = win32gui.GetWindowText(hwnd)
+
+# 通过 REST API 写入 Supabase
+rest_post("windows", {
+    "id": 1,
+    "title": title,
+    "process": exe_name,
+    "updated_at": "now()",
+})
+
+# 同时累积使用时长
+usage[prev_process] += elapsed
+rest_post("usage_stats", {"process": proc, "seconds": secs})
+</code></pre>
+<p>每 30 秒轮询一次，窗口变化时立即推送，同时每轮发送心跳保持在线状态。</p>
+<h3>2. 前端 (HTML + supabase-js)</h3>
+<p>前端是一个纯静态 HTML 文件，通过 <code>supabase-js</code> 的 Realtime 功能订阅数据库变更：</p>
+<pre><code>// 订阅 realtime 变更
+sb.channel('w')
+  .on('postgres_changes', {
+    event: '*',
+    schema: 'public',
+    table: 'windows',
+    filter: 'id=eq.1'
+  }, (payload) =&gt; {
+    show(payload.new);   // 实时更新界面
+  })
+  .subscribe();
+</code></pre>
+<p>窗口切换时毫秒级响应，离线超过 60 秒自动显示 "似了" 骷髅。</p>
+<h2>部署教程</h2>
+<h3>第一步：创建 Supabase 项目</h3>
+<ol>
+<li>打开 <a href="https://supabase.com">supabase.com</a>，注册/登录</li>
+<li>点击 <strong>New Project</strong>，填写名称和密码，完成创建</li>
+</ol>
+<h3>第二步：建表</h3>
+<p>在 SQL Editor 执行：</p>
+<pre><code>-- 当前窗口表
+CREATE TABLE public.windows (
+  id          INTEGER PRIMARY KEY DEFAULT 1,
+  title       TEXT NOT NULL DEFAULT '',
+  process     TEXT NOT NULL DEFAULT '',
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 使用统计表
+CREATE TABLE public.usage_stats (
+  process    TEXT PRIMARY KEY,
+  seconds    INTEGER NOT NULL DEFAULT 0,
+  icon_url   TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE public.windows;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.usage_stats;
+
+-- RLS
+CREATE POLICY "allow_anon" ON public.windows FOR ALL USING (id = 1) WITH CHECK (id = 1);
+CREATE POLICY "allow_anon" ON public.usage_stats FOR ALL USING (true) WITH CHECK (true);
+
+INSERT INTO public.windows (id, title, process) VALUES (1, '', '');
+</code></pre>
+<p>然后执行 github里的 <code>migration_icons.sql</code> 创建图标存储桶。</p>
+<h3>第三步：获取 API 凭据</h3>
+<p>Supabase 控制台 → <strong>Settings</strong> → <strong>API Keys</strong>，记下：</p>
+<ul>
+<li><strong>Project URL</strong>（形如 <code>https://xxxx.supabase.co</code>）</li>
+<li><strong>anon public key</strong>（以 <code>eyJhbGci...</code> 开头）</li>
+</ul>
+<h3>第四步：配置本地采集端</h3>
+<p>打开 <code>window_monitor.py</code>，修改第 5-6 行：</p>
+<pre><code>SUPABASE_URL = "https://你的项目.supabase.co"
+SUPABASE_KEY = "你的anon key"
+</code></pre>
+<h3>第五步：上传前端</h3>
+<p>将生成的 <code>index.html</code> 、 <code>styles.css</code> 以及 <code>icon.png</code> 上传到 EdgeOne Pages：</p>
+<h3>第六步：启动</h3>
+<pre><code>python window_monitor.py
+</code></pre>
+<p>看到 <code>[OK] Connected, tracking...</code> 即表示成功。打开 EdgeOne 地址即可实时查看窗口活动。</p>
+<p>访问 <a href="https://me.flygeon.top">me.flygeon.top</a>即可看到我在干啥~~（如果我还没似的话）~~</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>解决fuwari博客使用umami统计访问量时重复统计问题</title>
+  <link>https://flygeon.top/posts/7/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/7/</guid>
+  <pubDate>Sun, 07 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[本文解决在fuwari博客主题中使用umami进行访问量统计时有时会出现重复计算的问题]]></description>
+  <content:encoded><![CDATA[<p>在写博客添加访问量统计那篇文章时，就发现了进入文章后访问量会计算双数，进一次统计增加两次，当时一直不知道原因就将就用了。</p>
+<p>后面看到<a href="https://2x.nz/posts/swup-js/">https://2x.nz/posts/swup-js/</a>这篇文章时才把这个问题解决。</p>
+<p>具体原因是在 Fuwari 博客主题中使用 Umami 统计访问量时出现重复计算，根本原因在于   单页应用（SPA）路由切换机制与 Umami 统计脚本的交互冲突  。</p>
+<p>Fuwari 使用了 <code>swup</code> 来实现页面间的平滑过渡效果。swup 是一个前端路由库，它通过 AJAX 加载新页面内容并替换 DOM，而不是传统的整页刷新。</p>
+<p>然而，Umami 的统计脚本默认设计是针对传统多页应用的——每次页面加载时执行一次。当 swup 接管导航后，页面并不会真正刷新，但 Umami 脚本却可能被多次触发：</p>
+<ul>
+<li>首次进入页面：Umami 脚本正常加载并发送统计请求</li>
+<li>使用 swup 跳转到其他页面：DOM 被替换，但 Umami 脚本可能重新执行</li>
+<li>返回原页面：再次触发统计，导致同一访问被重复计算</li>
+</ul>
+<p>Umami 脚本在每次执行时会创建新的跟踪实例，而 swup 的页面切换机制没有配合清理旧的实例或阻止重复初始化。这就导致了重复计数，也就是我们本次要解决的问题</p>
+<p><s><strong>其实说这么多只是想在水一篇文章而已</strong></s></p>
+<p>解决办法就是在原来的最终代码中添加data-auto-track="false"属性
+参考<a href="https://github.com/afoim/fuwari/issues/79">https://github.com/afoim/fuwari/issues/79</a></p>
+<pre><code>- &lt;script defer src="https://cloud.umami.is/script.js" data-website-id="***"&gt;&lt;/script&gt;
++ &lt;script defer src="https://cloud.umami.is/script.js" data-website-id="***" data-swup-ignore-script&gt;&lt;/script&gt;
+</code></pre>
+]]></content:encoded>
+</item>
+  <item>
+  <title>使用 AI 推理一键获取人声 MIDI：Vocal2Midi 项目体验</title>
+  <link>https://flygeon.top/posts/5/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/5/</guid>
+  <pubDate>Sat, 06 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[基于 Qwen3-ASR 与 GAME 模型的人声转 MIDI 工具 Vocal2Midi 体验分享，支持一键生成 MIDI / USTX / 对齐辅助文件，适配 UTAU、Vocaloid 等虚拟歌姬工作流。]]></description>
+  <content:encoded><![CDATA[<p>最近在折腾 UTAU，刚好在 B 站主页刷到了 <a href="https://github.com/Xiantaidu/Vocal2Midi">Vocal2Midi</a> 的介绍视频，品鉴了一下，感觉这个效果确实挺惊艳的，遂在这里分享一下。</p>
+<p>Vocal2Midi 是一款基于 AI 推理的开源人声转 MIDI 工具，专为虚拟歌姬（UTAU / Vocaloid 等）工作流设计。相比传统手动扒谱或简单的音高提取工具，它在歌词对齐、音高识别和节奏还原上都有显著提升，能直接输出可编辑的 MIDI、UTAU 工程文件（USTX）以及歌词对齐辅助文件，大幅降低了“人声 → 虚拟歌姬”的门槛。</p>
+<p>&lt;iframe width="100%" height="468" src="//player.bilibili.com/player.html?bvid=BV1Ww7C6kEqL&amp;p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"&gt; &lt;/iframe&gt;</p>
+<blockquote>
+<p>附上作者的演示视频</p>
+</blockquote>
+<h2>核心亮点</h2>
+<p>(copy至原视频的)</p>
+<ol>
+<li><strong>从原始人声直接产出 MIDI / USTX / 对齐辅助文件</strong>：无需手动逐字对轨，一步生成虚拟歌姬可用的工程文件。</li>
+<li><strong>良好的汉语普通话与日语歌词灌注支持</strong>：对中文和日文歌曲的歌词识别与对齐效果优秀，减少了后期修词工作量。</li>
+<li><strong>支持使用现有歌词文件进行匹配，增强识别准确率</strong>：如果你已有歌词文本，可以直接导入进行强制对齐，进一步提升转写精度。</li>
+<li><strong>较低的配置需求，兼容市面主流配置</strong>：虽然内置了大模型，但推理效率经过优化，主流中端显卡即可流畅运行。</li>
+</ol>
+<h2>实际体验</h2>
+<p>vocal2midi使用了<code>Qwen3-ASR-1.7B</code>和<code>GAME-1.0.3-medium</code>的模型，全部解压完后吃了我10.2G的空间，占用还蛮大的其实。</p>
+<p>实际体验下来，生成的人声MIDI只需稍作修改就能达到合格甚至更好的标准，错音、词不对的现象很少见，效果比 X Studio 和 ACE Studio 的人声提取要强太多了。</p>
+<p><img src="https://raw.flygeon.eu.org/Flygeon/Astro/refs/heads/main/image/5-1.webp" alt="软件界面截图" /></p>
+<p>使用的话也很简单，准备好干声和歌词，无脑填进软件即可。
+然后一键推理，放松一下大脑，拿文件，完事。</p>
+<p>我用的显卡是 RTX 4070，测试结果贴下面了，供参考：</p>
+<ul>
+<li><strong>测试音频</strong>：一首约 4 分钟的歌曲（若能化为星座）</li>
+<li><strong>显卡</strong>：NVIDIA RTX 4070</li>
+<li><strong>推理耗时</strong>：约 <strong>32 秒</strong></li>
+</ul>
+<p>这个速度体感还是非常快的，比想象中快不少，演示视频过会在贴这里吧。</p>
+<p>附上项目地址：<a href="https://github.com/Xiantaidu/Vocal2Midi">https://github.com/Xiantaidu/Vocal2Midi</a></p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>为你的博客生成封面图吧</title>
+  <link>https://flygeon.top/posts/6/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/6/</guid>
+  <pubDate>Sat, 06 Jun 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[基于 afroim/easy_cover 二次开发的博客封面生成工具，新增深色模式、配置保存与导入导出，方便风格复用。]]></description>
+  <content:encoded><![CDATA[<h2>前言</h2>
+<p>写博客时，需要为博客生成封面图，看到二叉树树的GitHub有相关的项目，就Fork了一下尝试，效果也是非常Amazing啊，孩子非常爱吃（Bushi）</p>
+<p>然后体验了一下发现没有配置复用功能，导致每次都要重新填参数，这对于强迫症来说是极其难受的。</p>
+<p>那么我在Qwen老师的帮助下浅浅实现了这个功能（其实全是ai做的），顺手加了深色模式。</p>
+<p>不过原项目功能比较基础，缺少主题切换和配置持久化，每次打开都得重新填。于是 fork 了一份，动手加了几个实用功能，部署在 <a href="https://cover.flygeon.top/">cover.flygeon.top</a>。</p>
+<h2>我做了什么</h2>
+<p>在原项目基础上加入了以下特性：</p>
+<h3>深色模式</h3>
+<p>新增亮色/深色主题切换，适配不同博客的整体色调。考虑到很多开发者习惯深色编辑器，在暗光环境下生成封面也不会刺眼。主题状态通过 Tailwind 的 dark 类名控制，切换丝滑。</p>
+<h3>配置保存与导入导出</h3>
+<p>这是我觉得最实用的功能——原项目关闭页面后所有设置都会丢失，每次都要重新填写。</p>
+<p>现在支持：</p>
+<ul>
+<li><strong>保存配置</strong>：一键将当前封面参数保存到浏览器本地存储</li>
+<li><strong>导入配置</strong>：从本地 JSON 文件导入预设，方便多设备共享</li>
+<li><strong>导出配置</strong>：将当前配置导出为 JSON 文件，可以备份或在团队间复用</li>
+</ul>
+<h2>原项目 easy_cover</h2>
+<p>::github{repo="afoim/easy_cover"}</p>
+<h2>技术栈</h2>
+<ul>
+<li><strong>Vue 3</strong>：响应式 UI</li>
+<li><strong>Tailwind CSS</strong>：样式与深色模式</li>
+<li><strong>html-to-image</strong>：前端截图导出</li>
+<li><strong>Vite</strong>：构建与开发</li>
+</ul>
+<h2>使用方式</h2>
+<p>直接访问 <a href="https://cover.flygeon.top/">cover.flygeon.top</a>，填写封面信息，调整样式，点击下载即可。</p>
+<p>欢迎大家使用喵`</p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>对 Bangumi 反向代理，解决大陆地区访问问题</title>
+  <link>https://flygeon.top/posts/4/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/4/</guid>
+  <pubDate>Sat, 30 May 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[使用 Cloudflare Workers 搭建 Bangumi 反向代理，解决大陆地区访问困难的问题。]]></description>
+  <content:encoded><![CDATA[<p>:::tip
+关于为博客添加bangumi页面的教学见上一篇文章：<a href="/posts/3">为博客添加bangumi页面</a>
+:::</p>
+<h2>缘由</h2>
+<p>继上篇文章后，我发现这个bangumi在国内访问是一片中国红啊，这就导致了天朝网络的环境下无法加载出图片。为了确保正常访问，就需要搭建一个反向代理，将图片资源从 <code>lain.bgm.tv</code> 替换为我们自己的。</p>
+<h2>实现原理</h2>
+<p>通过cf worker可以很轻松的实现这个想法，只需要构建好反向代理脚本，然后绑定一个自己的域名即可。(cf默认分配的域名大陆地区会有阻断。)</p>
+<p>不过cf woker在大陆地区的网络情况并不理想，所以我在这基础上又套了一层eo的cdn。</p>
+<p>所以最终流程就是</p>
+<p><code>用户 -&gt; lain.flygeon.top -&gt; eo节点 -&gt; cfwoker -&gt; lain.bgm.tv</code></p>
+<p>为了防止建立反代被cf斩杀，我们还需要移除登录注册相关的敏感路内容。（防止被判钓鱼站点）</p>
+<h2>完整代码</h2>
+<pre><code>/**
+ * Cloudflare Workers 反向代理脚本
+ * 支持代理 bgm.tv 和 lain.bgm.tv
+ */
+
+// 默认目标域名（主站）
+const DEFAULT_HOST = 'bgm.tv';
+
+// 允许代理的目标域名列表
+const ALLOWED_HOSTS = [
+  'bgm.tv',
+  'lain.bgm.tv',
+];
+
+// 允许的请求方法
+const ALLOWED_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'];
+
+/** 需要屏蔽的固定路径 */
+const BLOCKED_PATHS = [
+  '/login',
+  '/signup',
+  '/register',
+  '/auth',
+  '/oauth',
+];
+
+/** 需要屏蔽的动态路径规则 */
+const BLOCKED_PATTERNS = [
+  /^\/subject\/\d+\/edit/,
+  /^\/subject\/\d+\/related/,
+  /^\/subject\/\d+\/episode_edit/,
+  /^\/subject\/\d+\/merge/,
+  /^\/character\/\d+\/edit/,
+  /^\/person\/\d+\/edit/,
+  /^\/subject\/\d+\/\(modify\)/,
+  /^\/subject\/\d+\/delete/,
+  /^\/subject\/\d+\/recollect/,
+  /^\/subject\/\d+\/watched/,
+  /^\/subject\/\d+\/interest/,
+  /^\/subject\/\d+\/comments/,
+];
+
+/** 检查路径是否需要屏蔽 */
+function isBlockedPath(path) {
+  const normalizedPath = path.replace(/\/$/, '') || '/';
+
+  for (const blocked of BLOCKED_PATHS) {
+    if (normalizedPath === blocked || normalizedPath.startsWith(blocked + '/')) {
+      return true;
+    }
+  }
+
+  for (const pattern of BLOCKED_PATTERNS) {
+    if (pattern.test(normalizedPath)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/** 替换 HTML 中的原始域名为代理域名 */
+function rewriteHtmlUrls(html, proxyOrigin) {
+  // 替换 lain.bgm.tv 的链接
+  html = html.replace(
+    /https?:\/\/lain\.bgm\.tv/gi,
+    `${proxyOrigin}`
+  );
+
+  // 替换 bgm.tv 的链接
+  html = html.replace(
+    /https?:\/\/bgm\.tv/gi,
+    `${proxyOrigin}`
+  );
+
+  // 处理相对协议 URL (//lain.bgm.tv)
+  html = html.replace(
+    /\/\/lain\.bgm\.tv/gi,
+    `${proxyOrigin}`
+  );
+
+  // 处理相对协议 URL (//bgm.tv)
+  html = html.replace(
+    /\/\/bgm\.tv/gi,
+    `${proxyOrigin}`
+  );
+
+  // 避免重复替换：清理可能出现的双重代理 URL
+  const escapedOrigin = proxyOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&amp;');
+  const doubleProxyPattern = new RegExp(
+    `${escapedOrigin}${escapedOrigin}/`,
+    'gi'
+  );
+  html = html.replace(doubleProxyPattern, `${proxyOrigin}/`);
+
+  return html;
+}
+
+/** 过滤 HTML 内容，移除登录/注册相关元素 */
+async function filterHtmlContent(response, proxyOrigin) {
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('text/html')) {
+    return response;
+  }
+
+  let html = await response.text();
+
+  // 替换 HTML 中的原始域名为代理域名
+  html = rewriteHtmlUrls(html, proxyOrigin);
+
+  // 移除登录/注册相关元素
+  const BLOCKED_HTML_PATTERNS = [
+    /&lt;form[^&gt;]*action="[^"]*(?:login|signin)[^"]*"[\s\S]*?&lt;\/form&gt;/gi,
+    /&lt;form[^&gt;]*id="[^"]*login[^"]*"[\s\S]*?&lt;\/form&gt;/gi,
+    /&lt;form[^&gt;]*class="[^"]*login[^"]*"[\s\S]*?&lt;\/form&gt;/gi,
+    /&lt;form[^&gt;]*action="[^"]*(?:signup|register)[^"]*"[\s\S]*?&lt;\/form&gt;/gi,
+    /&lt;div[^&gt;]*id="headerLogin"[^&gt;]*&gt;[\s\S]*?&lt;\/div&gt;/gi,
+    /&lt;a[^&gt;]*href="[^"]*(?:login|signin|signup|register)[^"]*"[^&gt;]*&gt;[\s\S]*?&lt;\/a&gt;/gi,
+  ];
+
+  for (const pattern of BLOCKED_HTML_PATTERNS) {
+    html = html.replace(pattern, '');
+  }
+
+  const filteredHeaders = new Headers(response.headers);
+  filteredHeaders.delete('content-length');
+
+  return new Response(html, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: filteredHeaders,
+  });
+}
+
+/**
+ * 主入口
+ */
+addEventListener('fetch', event =&gt; {
+  event.respondWith(handleRequest(event.request));
+});
+
+/**
+ * 处理 OPTIONS 预检请求
+ */
+function handleOptions(request) {
+  const headers = new Headers();
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Access-Control-Allow-Methods', ALLOWED_METHODS.join(', '));
+  headers.set('Access-Control-Allow-Headers', request.headers.get('Access-Control-Request-Headers') || '*');
+  headers.set('Access-Control-Max-Age', '86400');
+
+  return new Response(null, {
+    status: 204,
+    headers: headers,
+  });
+}
+
+async function handleRequest(request) {
+  const url = new URL(request.url);
+
+  // 处理 OPTIONS 预检请求
+  if (request.method === 'OPTIONS') {
+    return handleOptions(request);
+  }
+
+  // 确定目标域名
+  let targetHost = DEFAULT_HOST;
+  let targetPath = url.pathname;
+  let targetSearch = url.search;
+
+  // lain.bgm.tv 特有的资源路径前缀
+  const LAIN_PATH_PREFIXES = ['/r/', '/pic/', '/cover/', '/crt/', '/sub/', '/user/'];
+
+  if (LAIN_PATH_PREFIXES.some(prefix =&gt; url.pathname.startsWith(prefix))) {
+    targetHost = 'lain.bgm.tv';
+  }
+
+  // 检查路径是否需要屏蔽
+  if (isBlockedPath(targetPath)) {
+    return new Response(
+      `&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;访问受限&lt;/title&gt;&lt;/head&gt;
+&lt;body style="text-align:center;padding:50px;font-family:sans-serif;"&gt;
+  &lt;h1&gt;访问受限&lt;/h1&gt;
+  &lt;p&gt;该页面已被屏蔽。&lt;/p&gt;
+  &lt;a href="/"&gt;返回首页&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;`,
+      {
+        status: 403,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      }
+    );
+  }
+
+  // 构建目标 URL
+  const targetUrl = `https://${targetHost}${targetPath}${targetSearch}`;
+
+  // 验证目标域名是否在白名单中
+  if (!ALLOWED_HOSTS.includes(targetHost)) {
+    return new Response(
+      JSON.stringify({
+        error: 'Target host not allowed',
+        allowed_hosts: ALLOWED_HOSTS,
+      }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  // 复制并修改请求头
+  const headers = new Headers(request.headers);
+  headers.delete('host');
+  headers.delete('cf-connecting-ip');
+  headers.delete('cf-ray');
+  headers.delete('cf-visitor');
+  headers.delete('cf-worker');
+  headers.set('Host', targetHost);
+
+  // 创建代理请求
+  const proxyRequest = new Request(targetUrl, {
+    method: request.method,
+    headers: headers,
+    body: request.body,
+    redirect: 'manual',
+  });
+
+  try {
+    // 发送代理请求
+    const response = await fetch(proxyRequest);
+
+    // 复制响应并修改头部
+    const proxyHeaders = new Headers(response.headers);
+    proxyHeaders.set('Access-Control-Allow-Origin', '*');
+    proxyHeaders.set('Access-Control-Allow-Methods', ALLOWED_METHODS.join(', '));
+    proxyHeaders.set('Access-Control-Allow-Headers', '*');
+    proxyHeaders.delete('server');
+    proxyHeaders.delete('x-powered-by');
+    proxyHeaders.delete('via');
+
+    // 处理重定向
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      const location = proxyHeaders.get('location');
+      if (location) {
+        try {
+          const redirectUrl = new URL(location, targetUrl);
+          if (ALLOWED_HOSTS.includes(redirectUrl.hostname)) {
+            const proxyRedirect = `${url.origin}${redirectUrl.pathname}${redirectUrl.search}`;
+            proxyHeaders.set('location', proxyRedirect);
+          }
+        } catch (e) {
+          // 保留原始 location
+        }
+      }
+    }
+
+    // 处理 Set-Cookie 中的 Domain 属性
+    const setCookie = proxyHeaders.get('set-cookie');
+    if (setCookie) {
+      proxyHeaders.set('set-cookie', setCookie.replace(/domain=[^;]+;?/gi, ''));
+    }
+
+    // 过滤 HTML 内容
+    const filteredResponse = await filterHtmlContent(
+      new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: proxyHeaders,
+      }),
+      url.origin
+    );
+
+    return filteredResponse;
+
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        error: 'Proxy request failed',
+        message: error.message,
+      }),
+      {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+}
+</code></pre>
+<h2>博客 Bangumi 页面适配</h2>
+<p>搭建好反向代理后，还需要修改博客中 Bangumi 页面的图片加载逻辑，让封面图走代理域名而不是直连 <code>lain.bgm.tv</code>。</p>
+<h3>修改 Card.astro</h3>
+<p>找到 <code>src/components/bangumi/Card.astro</code>，添加一个 <code>getImageUrl</code> 函数，将 Bangumi 的图片地址替换为代理地址：</p>
+<pre><code>---
+import type { UserSubjectCollection } from "@/types/bangumi";
+
+interface Props {
+	item: UserSubjectCollection;
+}
+
+const { item } = Astro.props;
+
+const subject_base_url = "https://bgm.tv/subject/";
+
+function getImageUrl(originalUrl: string | undefined): string | undefined {
+	if (!originalUrl) return undefined;
+	return originalUrl.replace(
+		"https://lain.bgm.tv/",
+		"https://lain.flygeon.top/",
+	);
+}
+---
+</code></pre>
+<p>然后在图片标签中使用这个函数：</p>
+<pre><code>&lt;img
+  data-src={getImageUrl(item.subject.images.medium)}
+  alt={item.subject.name_cn || item.subject.name}
+  class="bangumi-lazy-img w-full h-full object-cover pointer-events-none opacity-0 transition-opacity duration-300"
+/&gt;
+</code></pre>
+<h3>为什么只改 Card 组件</h3>
+<p>Bangumi 页面中，图片地址只出现在 <code>Card.astro</code> 这一个组件里。<code>BangumiSection.astro</code> 负责数据分发和筛选，<code>Pagination.astro</code> 负责分页交互，<code>FilterControls.astro</code> 负责状态过滤，它们都不涉及图片 URL 的渲染。因此只需要修改 Card 组件即可覆盖所有图片请求。</p>
+<h2>enjoy it！</h2>
+]]></content:encoded>
+</item>
+  <item>
+  <title>博客更新日志</title>
+  <link>https://flygeon.top/posts/log/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/log/</guid>
+  <pubDate>Sat, 30 May 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[将会记录博客的更新内容。]]></description>
+  <content:encoded><![CDATA[<h2>2026年07月15日</h2>
+<ul>
+<li>添加置顶功能</li>
+<li>添加标题悬浮高亮</li>
+<li>返回顶部按钮支持显示文章阅读进度（仅在文章页显示）</li>
+</ul>
+<h2>2026年07月14日</h2>
+<ul>
+<li>修改目录样式</li>
+</ul>
+<h2>2026年06月27日</h2>
+<ul>
+<li>添加banner头图</li>
+</ul>
+<h2>2026年06月07日</h2>
+<ul>
+<li>修复umami重复统计问题</li>
+</ul>
+<h2>2026年06月06日</h2>
+<ul>
+<li>封面图比例调整为4:3</li>
+</ul>
+<h2>2026年05月30日</h2>
+<ul>
+<li>卡片标签调整</li>
+</ul>
+<h2>2026年05月29日</h2>
+<ul>
+<li>反代bangumi图源，解决大陆地区访问问题。</li>
+</ul>
+<h2>2026年05月27日</h2>
+<ul>
+<li>优化bangumi页面布局</li>
+<li>添加线路切换功能</li>
+</ul>
+<h2>2026年05月24日</h2>
+<ul>
+<li>添加友链界面</li>
+<li>添加访问量统计</li>
+<li>添加bangumi页面</li>
+</ul>
+]]></content:encoded>
+</item>
+  <item>
+  <title>为 Fuwari 博客添加 Umami 访问量统计</title>
+  <link>https://flygeon.top/posts/3/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/3/</guid>
+  <pubDate>Sun, 24 May 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[本文介绍如何基于 Umami 逆向 API 为静态博客添加实时访问量统计，包括侧边栏总览卡片和文章独立浏览量。]]></description>
+  <content:encoded><![CDATA[<p>:::tip
+你可以直接将这篇文章丢给你的ai Agent，让它帮你实现。
+:::</p>
+<p>对于静态博客而言，了解访客来源与流量趋势是很有必要的。在不自建服务器的前提下，配置简单、功能强大的 Umami 往往是我们的首选。</p>
+<p>然而，直接挂载 Umami 的分享外链不够直观且破坏页面一致性。本文将教你如何将 Umami 的统计数据以原生组件的形式集成到博客中，实现以下效果：</p>
+<ul>
+<li>侧边栏显示<strong>总浏览量</strong>和<strong>访问数</strong></li>
+<li>每篇文章卡片显示该文章的<strong>独立浏览量</strong></li>
+<li>数据实时获取，支持数字动画</li>
+</ul>
+<h2>前置条件</h2>
+<ul>
+<li>一个已部署好的 Fuwari 博客</li>
+<li>启用 Umami 统计的站点</li>
+<li>获取 Umami 的分享链接</li>
+</ul>
+<h3>获取 Umami 分享链接</h3>
+<p>在 Umami 后台启用"分享 URL"，你应该会得到一个类似 <code>https://umami.example.com/share/OSwi3PpuZgZ2Io3a</code> 格式的链接。记下这个链接，稍后配置需要用到。</p>
+<h2>步骤一：添加 Umami 跟踪脚本</h2>
+<p>首先需要在博客的 <code>&lt;head&gt;</code> 中注入 Umami 的跟踪脚本，这样才能记录访问数据。</p>
+<p>在 <code>src/layouts/Layout.astro</code> 的 <code>&lt;head&gt;</code> 区域添加：</p>
+<pre><code>&lt;script defer src="https://example.com/script.js" data-website-id="你的website-id"&gt;&lt;/script&gt;
+</code></pre>
+<blockquote>
+<p><strong>提示</strong>：这在Umami的后台配置中可以找到。</p>
+</blockquote>
+<h2>步骤二：创建侧边栏统计组件</h2>
+<p>在 <code>src/components/widget/</code> 目录下创建 <code>UmamiStats.astro</code>：</p>
+<pre><code>---
+import WidgetLayout from "./WidgetLayout.astro";
+
+interface Props {
+	class?: string;
+	style?: string;
+}
+const { class: className, style } = Astro.props;
+---
+
+&lt;WidgetLayout name="统计" id="umami-stats" class:list={[className, "cursor-pointer transition-opacity active:scale-95"]} {style}&gt;
+    &lt;a id="umami-link" target="_blank" rel="noopener noreferrer" class="block"&gt;
+        &lt;div class="grid grid-cols-2 divide-x divide-neutral-200 dark:divide-neutral-700 text-center py-2"&gt;
+            &lt;div class="px-2"&gt;
+                &lt;div class="text-2xl font-bold text-neutral-900 dark:text-neutral-100" id="total-pageviews"&gt;-&lt;/div&gt;
+                &lt;div class="text-sm text-neutral-500 dark:text-neutral-400"&gt;总浏览量&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class="px-2"&gt;
+                &lt;div class="text-2xl font-bold text-neutral-900 dark:text-neutral-100" id="total-visits"&gt;-&lt;/div&gt;
+                &lt;div class="text-sm text-neutral-500 dark:text-neutral-400"&gt;访问数&lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/a&gt;
+&lt;/WidgetLayout&gt;
+
+&lt;script&gt;
+const UMAMI_CONFIG = {
+    apiUrl: 'https://umami.flygeon.eu.org/api',
+    shareId: 'OSwi3PpuZgZ2Io3a',
+};
+
+let __UMAMI_INTERNAL = {
+    websiteId: '',
+    shareToken: '',
+    isReady: false
+};
+
+const FALLBACK_STATS = {
+    pageviews: 1000,
+    visits: 1000,
+};
+
+async function initUmamiConfig() {
+    try {
+        const res = await fetch(`${UMAMI_CONFIG.apiUrl}/share/${UMAMI_CONFIG.shareId}`);
+        const data = await res.json();
+
+        __UMAMI_INTERNAL = {
+            websiteId: data.websiteId,
+            shareToken: data.token,
+            isReady: true
+        };
+
+        const link = document.getElementById('umami-link');
+        if (link) link.setAttribute('href', `https://umami.flygeon.eu.org/share/${UMAMI_CONFIG.shareId}`);
+
+    } catch (e) {
+        console.error('Umami Config Init Failed:', e);
+    }
+}
+
+function formatNumber(num: number): string {
+    if (num &gt;= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num &gt;= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return Math.round(num).toString();
+}
+
+function setStats(values: { pageviews: number; visits: number }) {
+    const pageviewsElement = document.getElementById('total-pageviews');
+    const visitsElement = document.getElementById('total-visits');
+
+    const easeOutCubic = (t: number) =&gt; 1 - Math.pow(1 - t, 3);
+    const animHandles = new Map&lt;HTMLElement, number&gt;();
+
+    const animateStat = (el: HTMLElement | null, to: number, duration = 2000) =&gt; {
+        if (!el) return;
+
+        const prev = animHandles.get(el);
+        if (prev) cancelAnimationFrame(prev);
+
+        const from = 0;
+        const startTime = performance.now();
+
+        const tick = (now: number) =&gt; {
+            const elapsed = now - startTime;
+            const progress = Math.min(1, elapsed / duration);
+            const easedProgress = easeOutCubic(progress);
+
+            const current = from + (to - from) * easedProgress;
+            el.textContent = formatNumber(current);
+
+            if (progress &lt; 1) {
+                animHandles.set(el, requestAnimationFrame(tick));
+            }
+        };
+        animHandles.set(el, requestAnimationFrame(tick));
+    };
+
+    animateStat(pageviewsElement, values.pageviews);
+    animateStat(visitsElement, values.visits);
+}
+
+async function fetchUmamiStats() {
+    if (!__UMAMI_INTERNAL.isReady) {
+        await initUmamiConfig();
+    }
+
+    if (!__UMAMI_INTERNAL.isReady) {
+        setStats(FALLBACK_STATS);
+        return;
+    }
+
+    try {
+        const endAt = Date.now();
+        const startAt = 0;
+        const url = `${UMAMI_CONFIG.apiUrl}/websites/${__UMAMI_INTERNAL.websiteId}/stats?startAt=${startAt}&amp;endAt=${endAt}&amp;unit=hour&amp;timezone=Asia%2FShanghai`;
+
+        const response = await fetch(url, {
+            headers: {
+                'x-umami-share-token': __UMAMI_INTERNAL.shareToken
+            }
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        setStats({
+            pageviews: data.pageviews || 0,
+            visits: data.visits || 0,
+        });
+
+    } catch (error) {
+        console.error('Umami Fetch Failed:', error);
+        setStats(FALLBACK_STATS);
+    }
+}
+
+let __umamiStatsStarted = false;
+function startUmamiStats() {
+    if (__umamiStatsStarted) return;
+    __umamiStatsStarted = true;
+    fetchUmamiStats();
+}
+
+function initUmamiStatsVisibility() {
+    const container = document.getElementById('umami-stats');
+    const io = new IntersectionObserver((entries) =&gt; {
+        if (entries[0].isIntersecting) {
+            startUmamiStats();
+            io.disconnect();
+        }
+    }, { threshold: 0.1 });
+
+    if (container) io.observe(container);
+}
+
+initUmamiStatsVisibility();
+
+if (window.swup) {
+    window.swup.hooks.on('page:view', () =&gt; {
+        __umamiStatsStarted = false;
+        initUmamiStatsVisibility();
+    });
+}
+&lt;/script&gt;
+</code></pre>
+<p>记得将 <code>apiUrl</code> 和 <code>shareId</code> 替换为你自己的 Umami 信息，如果直接照抄我的配置，你的网站统计会算在我博客上。</p>
+<p>我是自建umami服务器的，如果你使用Umami官方的服务，你的 <code>apiUrl</code> 应该是<code>https://cloud.umami.is/analytics/地区/api</code></p>
+<p>美国的是us，欧洲的是eu</p>
+<p>如果你和我一样自建服务器的话，地址则是<code>https://服务器地址/api</code></p>
+<h2>步骤三：将统计组件添加到侧边栏</h2>
+<p>编辑 <code>src/components/widget/SideBar.astro</code>，导入并使用 <code>UmamiStats</code> 组件：</p>
+<pre><code>---
+import type { MarkdownHeading } from "astro";
+import Categories from "./Categories.astro";
+import Profile from "./Profile.astro";
+import RouteSwitch from "./RouteSwitch.astro";
+import Tag from "./Tags.astro";
+import UmamiStats from "./UmamiStats.astro";
+
+interface Props {
+	class?: string;
+	headings?: MarkdownHeading[];
+}
+
+const className = Astro.props.class;
+---
+&lt;div id="sidebar" class:list={[className, "w-full"]}&gt;
+    &lt;div class="flex flex-col w-full gap-4 mb-4"&gt;
+        &lt;Profile&gt;&lt;/Profile&gt;
+    &lt;/div&gt;
+    &lt;div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4"&gt;
+        &lt;RouteSwitch class="onload-animation" style="animation-delay: 100ms"&gt;&lt;/RouteSwitch&gt;
+        &lt;Categories class="onload-animation" style="animation-delay: 150ms"&gt;&lt;/Categories&gt;
+        &lt;Tag class="onload-animation" style="animation-delay: 200ms"&gt;&lt;/Tag&gt;
+        &lt;UmamiStats class="onload-animation" style="animation-delay: 250ms"&gt;&lt;/UmamiStats&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<h2>步骤四：为文章卡片添加独立浏览量</h2>
+<p>编辑 <code>src/components/PostCard.astro</code>，在 frontmatter 区域添加文章路径提取：</p>
+<pre><code>const postPath = url.replace(/\/$/, "");
+</code></pre>
+<p>在文章卡片的元信息区域（字数和阅读时间旁边）添加浏览量显示：</p>
+<pre><code>&lt;div class="text-sm text-black/30 dark:text-white/30 flex gap-4 transition"&gt;
+    &lt;div&gt;
+        {remarkPluginFrontmatter.words} {" " + i18n(remarkPluginFrontmatter.words === 1 ? I18nKey.wordCount : I18nKey.wordsCount)}
+    &lt;/div&gt;
+    &lt;div&gt;|&lt;/div&gt;
+    &lt;div&gt;
+        {remarkPluginFrontmatter.minutes} {" " + i18n(remarkPluginFrontmatter.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
+    &lt;/div&gt;
+    &lt;div&gt;|&lt;/div&gt;
+    &lt;div class="flex items-center gap-1 post-views" data-path={postPath}&gt;
+        &lt;Icon name="material-symbols:visibility-outline-rounded" class="text-base"&gt;&lt;/Icon&gt;
+        &lt;span class="post-views-count"&gt;-&lt;/span&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>在文件末尾添加统计脚本：</p>
+<pre><code>&lt;script&gt;
+const UMAMI_POST_CONFIG = {
+    apiUrl: 'https://umami.flygeon.eu.org/api',
+    shareId: 'OSwi3PpuZgZ2Io3a',
+};
+
+let __UMAMI_POST_INTERNAL = {
+    websiteId: '',
+    shareToken: '',
+    isReady: false
+};
+
+async function initUmamiPostConfig() {
+    try {
+        const res = await fetch(`${UMAMI_POST_CONFIG.apiUrl}/share/${UMAMI_POST_CONFIG.shareId}`);
+        const data = await res.json();
+
+        __UMAMI_POST_INTERNAL = {
+            websiteId: data.websiteId,
+            shareToken: data.token,
+            isReady: true
+        };
+    } catch (e) {
+        console.error('Umami Post Config Init Failed:', e);
+    }
+}
+
+function formatNumber(num: number): string {
+    if (num &gt;= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num &gt;= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return Math.round(num).toString();
+}
+
+async function fetchPostStats(path: string) {
+    if (!__UMAMI_POST_INTERNAL.isReady) {
+        await initUmamiPostConfig();
+    }
+
+    if (!__UMAMI_POST_INTERNAL.isReady) {
+        return null;
+    }
+
+    try {
+        const endAt = Date.now();
+        const startAt = 0;
+        // Umami v3 API: use path=eq. prefix for exact match
+        const apiUrl = `${UMAMI_POST_CONFIG.apiUrl}/websites/${__UMAMI_POST_INTERNAL.websiteId}/stats?startAt=${startAt}&amp;endAt=${endAt}&amp;unit=hour&amp;timezone=Asia%2FShanghai&amp;path=eq.${encodeURIComponent(path + '/')}`;
+
+        const response = await fetch(apiUrl, {
+            headers: {
+                'x-umami-share-token': __UMAMI_POST_INTERNAL.shareToken
+            }
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
+        return {
+            pageviews: data.pageviews || 0,
+            visits: data.visits || 0,
+        };
+    } catch (error) {
+        console.error('Umami Post Fetch Failed:', error);
+        return null;
+    }
+}
+
+async function initPostViews() {
+    const viewElements = document.querySelectorAll('.post-views');
+    if (viewElements.length === 0) return;
+
+    for (const el of viewElements) {
+        const path = el.getAttribute('data-path');
+        const countEl = el.querySelector('.post-views-count');
+        if (!path || !countEl) continue;
+
+        const stats = await fetchPostStats(path);
+        if (stats) {
+            countEl.textContent = formatNumber(stats.pageviews);
+        } else {
+            countEl.textContent = '-';
+        }
+    }
+}
+
+initPostViews();
+
+if (window.swup) {
+    window.swup.hooks.on('page:view', () =&gt; {
+        initPostViews();
+    });
+}
+&lt;/script&gt;
+</code></pre>
+<h2>自定义选项</h2>
+<h3>修改统计周期</h3>
+<p>默认统计<strong>所有时间</strong>的数据（<code>startAt = 0</code>）。如需调整时间范围，可修改 <code>startAt</code> 参数：</p>
+<pre><code>// 最近24小时
+const startAt = Date.now() - 86400000;
+
+// 最近30天
+const startAt = Date.now() - 2592000000;
+
+// 最近90天
+const startAt = Date.now() - 7776000000;
+</code></pre>
+<h3>修改备用数据</h3>
+<p>如果 API 请求失败，组件会显示备用数据。可在 <code>FALLBACK_STATS</code> 中修改：</p>
+<pre><code>const FALLBACK_STATS = {
+    pageviews: 1000,
+    visits: 1000,
+};
+</code></pre>
+<h2>最终效果</h2>
+<p>完成以上步骤后，你将看到：</p>
+<ol>
+<li><strong>侧边栏统计卡片</strong>：实时显示博客总浏览量和总访问数，点击可跳转到 Umami 分享页</li>
+<li><strong>文章卡片浏览量</strong>：每篇文章显示独立的浏览量数据</li>
+<li><strong>数字动画</strong>：数据加载时带有平滑的增长动画</li>
+<li><strong>SPA 兼容</strong>：使用 Swup 路由时数据会自动刷新</li>
+</ol>
+<hr />
+<blockquote>
+<p><strong>参考文献</strong>：</p>
+<ul>
+<li><a href="https://blog.tianhw.top/posts/fuwari-umami-stats/">为 Fuwari 添加 Umami 访问统计卡片</a></li>
+<li><a href="https://2x.nz/posts/static-view/">静态博客展示文章浏览量</a></li>
+</ul>
+</blockquote>
+]]></content:encoded>
+</item>
+  <item>
+  <title>一些mmd资源/网站汇总</title>
+  <link>https://flygeon.top/posts/2/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/2/</guid>
+  <pubDate>Sat, 23 May 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[最近在学习制作mmd，刚好把一些用到的东西贴在这里备忘]]></description>
+  <content:encoded><![CDATA[<h2>模型站</h2>
+<p>模之屋 <a href="https://www.aplaybox.com/">点我</a></p>
+<p>N站 <a href="https://www.niconico.jp/">点我</a></p>
+<h2>软件下载</h2>
+<p>mmd本体整合：<a href="https://oss.aplaybox.com/uploads/works/models/MMD2025%E6%95%B4%E5%90%88%E7%89%88.zip">点我</a></p>
+<p>bledner mmd插件：<a href="https://extensions.blender.org/add-ons/mmd-tools/">点我</a></p>
+<p>pmxeditor：</p>
+<h2>教程</h2>
+<p>改模教程：<a href="https://www.iwara.tv/forum/guides/5d92a1db-49b4-48f0-95dc-482b4b8ceffd/r18-chinese-tutorial-how-to-edit-a-model-into-nsfw-version">点我</a></p>
+<p>模之屋教程：<a href="https://www.aplaybox.com/article/details/749211379">点我</a></p>
+<p>PmxEditor从入门到精通：<a href="https://www.bilibili.com/video/BV1oW411G7ri/">点我</a></p>
+]]></content:encoded>
+</item>
+  <item>
+  <title>新的开始</title>
+  <link>https://flygeon.top/posts/1/</link>
+  <guid isPermaLink="true">https://flygeon.top/posts/1/</guid>
+  <pubDate>Wed, 20 May 2026 00:00:00 GMT</pubDate>
+  <description><![CDATA[RE:第一章 堂堂复活 Stand by！]]></description>
+  <content:encoded><![CDATA[<h2>复活YADAZE 👋</h2>
+<p>孩子们博客复活了，这次换了架构，由之前的Typecho切换到了Astro。</p>
+<p>其实很久之前就说要换了，但是，bokuwa 比较懒狗，</p>
+<p>正好vps也快到期了，所以。。。</p>
+<p>之前的文章可能会搬过来吧，也可能不会，这也说不准</p>
+<p>之前的文章图片用的都是图床，图炸了好多，补起来有点麻烦</p>
+<p>就这样吧。</p>
+]]></content:encoded>
+</item>
+  </channel>
+</rss>

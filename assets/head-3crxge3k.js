@@ -1,0 +1,1 @@
+const n="Flygeonの小站",o="Flygeon の个人博客：分享 Web 开发与自建项目（Vue 3 自建 SSG 博客、Cloudflare Workers 动态服务），也记录 Bangumi 追番、设计与日常碎碎念。";let t={};function l(e){t={...t,...e},typeof document<"u"&&e.title&&(document.title=e.title)}export{o as S,n as a,l as s};
